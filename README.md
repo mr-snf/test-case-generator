@@ -70,6 +70,7 @@ Test-case-generator/
    # TestRail Project Configuration
    TESTRAIL_PROJECT_ID=1
    TESTRAIL_SUITE_ID=1
+   TARGET_SECTION_ID=101
    ```
 
 ## 🚀 Usage

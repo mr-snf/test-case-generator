@@ -1,0 +1,774 @@
+"""
+Prompt Generation Orchestrator for Cursor AI
+This script analyzes the project structure and generates comprehensive prompt data
+for Cursor AI to create test cases based on existing patterns and requirements.
+"""
+
+import os
+import json
+from typing import List, Dict, Union, Any
+from pathlib import Path
+
+from configs.output_test_case_config import (
+    DEFAULT_TEST_CASES_COUNT,
+    DEFAULT_TEST_TYPES,
+    DEFAULT_PRIORITY_DISTRIBUTION,
+    WCAG_GUIDLINE,
+    SIMILARITY_THRESHOLD,
+)
+
+
+class PromptGeneratorOrchestrator:
+    """Orchestrates the prompt generation workflow for Cursor AI test case creation"""
+
+    def __init__(self):
+        self.knowledge_base_file = "knowledgebase/existing_test_cases.json"
+        self.feature_dir = "feature"
+        self.target_dir = "target"
+        self.config_file = (
+            "configs/output_test_case_config.py"  # For backward compatibility
+        )
+
+        # Ensure directories exist
+        os.makedirs(self.target_dir, exist_ok=True)
+
+    def read_knowledge_base(self) -> List[Dict]:
+        """Read and analyze existing test cases from knowledge base"""
+        print("📖 Reading knowledge base...")
+
+        if not os.path.exists(self.knowledge_base_file):
+            print(f"⚠️  Knowledge base file not found: {self.knowledge_base_file}")
+            return []
+
+        try:
+            with open(self.knowledge_base_file, "r", encoding="utf-8") as f:
+                test_cases = json.load(f)
+
+            print(f"✅ Loaded {len(test_cases)} existing test cases")
+            return test_cases
+
+        except Exception as e:
+            print(f"❌ Error reading knowledge base: {str(e)}")
+            return []
+
+    def analyze_test_case_patterns(self, test_cases: List[Dict]) -> Dict:
+        """Analyze patterns in existing test cases"""
+        print("🔍 Analyzing test case patterns...")
+
+        if not test_cases:
+            return {}
+
+        patterns: Dict[str, Any] = {
+            "structure": {},
+            "types": {},
+            "priorities": {},
+            "naming_conventions": [],
+            "step_patterns": [],
+            "common_preconditions": [],
+            "custom_fields": {},
+            "field_variations": {},
+            "step_formats": [],
+        }
+
+        # Analyze structure
+        for case in test_cases:
+            # Count types (handle multiple field name variations)
+            test_type = (
+                case.get("type", "")
+                or case.get("type_id", "")
+                or case.get("custom_type", "")
+                or "unknown"
+            )
+            test_type_str = str(test_type)  # Ensure it's a string
+            patterns["types"][test_type_str] = (
+                patterns["types"].get(test_type_str, 0) + 1
+            )
+
+            # Count priorities (handle multiple field name variations)
+            priority = (
+                case.get("priority", "")
+                or case.get("priority_id", "")
+                or case.get("custom_priority", "")
+                or "unknown"
+            )
+            priority_str = str(priority)  # Ensure it's a string
+            patterns["priorities"][priority_str] = (
+                patterns["priorities"].get(priority_str, 0) + 1
+            )
+
+            # Collect naming conventions
+            title = case.get("title", "")
+            if title:
+                patterns["naming_conventions"].append(title)
+
+            # Collect step patterns (handle multiple step field variations)
+            steps = (
+                case.get("custom_steps_separated", [])
+                or case.get("steps", [])
+                or case.get("custom_steps", [])
+                or []
+            )
+            if steps:
+                if isinstance(steps, list):
+                    for step in steps:
+                        if isinstance(step, dict):
+                            step_content = step.get("content", "") or step.get(
+                                "step", ""
+                            )
+                            if step_content:
+                                patterns["step_patterns"].append(step_content)
+                        elif isinstance(step, str):
+                            patterns["step_patterns"].append(step)
+
+            # Collect preconditions (handle multiple field name variations)
+            preconds = (
+                case.get("custom_preconds", "")
+                or case.get("preconditions", "")
+                or case.get("preconds", "")
+                or case.get("custom_preconditions", "")
+                or ""
+            )
+            if preconds:
+                patterns["common_preconditions"].append(preconds)
+
+            # Analyze custom fields
+            for key, value in case.items():
+                if key.startswith("custom_") and key not in [
+                    "custom_steps_separated",
+                    "custom_preconds",
+                    "custom_test_data",
+                ]:
+                    if key not in patterns["custom_fields"]:
+                        patterns["custom_fields"][key] = []
+                    value_str = str(value) if value is not None else ""
+                    if value_str and value_str not in patterns["custom_fields"][key]:
+                        patterns["custom_fields"][key].append(value_str)
+
+            # Analyze field variations
+            for key in case.keys():
+                patterns["field_variations"][key] = (
+                    patterns["field_variations"].get(key, 0) + 1
+                )
+
+            # Analyze step formats
+            if steps and isinstance(steps, list) and steps:
+                first_step = steps[0]
+                if isinstance(first_step, dict):
+                    step_format = (
+                        "content" in first_step,
+                        "expected" in first_step,
+                        "step" in first_step,
+                        tuple(sorted(first_step.keys())),
+                    )
+                    # Check if this format already exists
+                    if step_format not in patterns["step_formats"]:
+                        patterns["step_formats"].append(step_format)
+
+        print(f"✅ Analyzed patterns:")
+        print(f"   - Test types: {patterns['types']}")
+        print(f"   - Priorities: {patterns['priorities']}")
+        print(f"   - Sample titles: {patterns['naming_conventions'][:3]}")
+        if patterns["custom_fields"]:
+            print(f"   - Custom fields found: {list(patterns['custom_fields'].keys())}")
+        print(f"   - Total unique fields: {len(patterns['field_variations'])}")
+
+        return patterns
+
+    def read_feature_files(self) -> List[Dict]:
+        """Read all feature files from the feature directory"""
+        print("📋 Reading feature files...")
+
+        if not os.path.exists(self.feature_dir):
+            print(f"⚠️  Feature directory not found: {self.feature_dir}")
+            return []
+
+        features = []
+
+        for file_path in Path(self.feature_dir).glob("*.md"):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                features.append(
+                    {
+                        "filename": file_path.name,
+                        "content": content,
+                        "path": str(file_path),
+                    }
+                )
+
+                print(f"✅ Loaded feature: {file_path.name}")
+
+            except Exception as e:
+                print(f"❌ Error reading {file_path.name}: {str(e)}")
+
+        print(f"✅ Loaded {len(features)} feature files")
+        return features
+
+    def extract_feature_requirements(self, features: List[Dict]) -> Dict:
+        """Extract key requirements from feature files"""
+        print("🎯 Extracting feature requirements...")
+
+        requirements: Dict[str, List[str]] = {
+            "functional": [],
+            "technical": [],
+            "security": [],
+            "accessibility": [],
+            "performance": [],
+            "api_endpoints": [],
+            "database": [],
+            "browser_support": [],
+        }
+
+        for feature in features:
+            content = feature["content"].lower()
+
+            # Extract functional requirements
+            if "functional" in content or "requirement" in content:
+                requirements["functional"].append(feature["filename"])
+
+            # Extract technical specifications
+            if "technical" in content or "specification" in content:
+                requirements["technical"].append(feature["filename"])
+
+            # Extract security requirements
+            if "security" in content or "encrypt" in content or "lockout" in content:
+                requirements["security"].append(feature["filename"])
+
+            # Extract accessibility requirements
+            if (
+                "accessibility" in content
+                or "wcag" in content
+                or "screen reader" in content
+                or "aria" in content
+                or "keyboard navigation" in content
+                or "color contrast" in content
+            ):
+                requirements["accessibility"].append(feature["filename"])
+
+            # Extract performance requirements
+            if "performance" in content or "response time" in content:
+                requirements["performance"].append(feature["filename"])
+
+            # Extract API endpoints
+            if "api" in content or "endpoint" in content:
+                requirements["api_endpoints"].append(feature["filename"])
+
+            # Extract database requirements
+            if "database" in content or "table" in content:
+                requirements["database"].append(feature["filename"])
+
+            # Extract browser support
+            if "browser" in content or "chrome" in content or "firefox" in content:
+                requirements["browser_support"].append(feature["filename"])
+
+        print(f"✅ Extracted requirements:")
+        for req_type, files in requirements.items():
+            if files:
+                print(f"   - {req_type}: {len(files)} files")
+
+        return requirements
+
+    def read_configuration(self) -> Dict:
+        """Read test case generation configuration"""
+        print("⚙️  Reading configuration...")
+
+        config: Dict[str, Union[int, List[str], Dict[str, int], str]] = {
+            "test_case_count": DEFAULT_TEST_CASES_COUNT,
+            "test_types": DEFAULT_TEST_TYPES,
+            "priority_distribution": DEFAULT_PRIORITY_DISTRIBUTION,
+        }
+
+        # Only include WCAG guideline if accessibility is in test types
+        test_types = config.get("test_types", [])
+        if isinstance(test_types, list) and "accessibility" in test_types:
+            if WCAG_GUIDLINE:
+                config["wcag_guideline"] = WCAG_GUIDLINE
+            else:
+                config["wcag_guideline"] = "WCAG 2.2 AA"  # Default
+                print("   ⚠️  WCAG Guideline not set, using default: WCAG 2.2 AA")
+
+        print(f"✅ Loaded configuration:")
+        print(f"   - Test case count: {config['test_case_count']}")
+        print(f"   - Test types: {config['test_types']}")
+        print(f"   - Priority distribution: {config['priority_distribution']}")
+        if "wcag_guideline" in config:
+            print(f"   - WCAG Guideline: {config['wcag_guideline']}")
+
+        return config
+
+    def save_test_cases(self, test_cases: List[Dict], feature_name: str = "generated"):
+        """Save generated test cases to target folder"""
+        print(f"💾 Saving test cases to target folder...")
+
+        filename = f"{feature_name}_test_cases.json"
+        filepath = os.path.join(self.target_dir, filename)
+
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(test_cases, f, indent=2, ensure_ascii=False)
+
+            print(f"✅ Saved {len(test_cases)} test cases to {filepath}")
+
+            # Create summary
+            self.create_summary(test_cases, filepath)
+
+        except Exception as e:
+            print(f"❌ Error saving test cases: {str(e)}")
+
+    def create_summary(self, test_cases: List[Dict], filepath: str):
+        """Create a summary of generated test cases"""
+        summary_file = filepath.replace(".json", "_summary.txt")
+
+        # Count by type and priority
+        type_counts: Dict[str, int] = {}
+        priority_counts: Dict[str, int] = {}
+
+        for case in test_cases:
+            test_type = case.get("type", "unknown")
+            priority = case.get("priority", "unknown")
+
+            type_counts[test_type] = type_counts.get(test_type, 0) + 1
+            priority_counts[priority] = priority_counts.get(priority, 0) + 1
+
+        summary = f"""
+Test Case Generation Summary
+============================
+
+Generated: {len(test_cases)} test cases
+File: {os.path.basename(filepath)}
+
+Breakdown by Type:
+"""
+
+        for test_type, count in type_counts.items():
+            summary += f"  - {test_type}: {count}\n"
+
+        summary += "\nBreakdown by Priority:\n"
+        for priority, count in priority_counts.items():
+            summary += f"  - {priority}: {count}\n"
+
+        try:
+            with open(summary_file, "w", encoding="utf-8") as f:
+                f.write(summary)
+            print(f"✅ Summary saved to {os.path.basename(summary_file)}")
+        except Exception as e:
+            print(f"⚠️  Error saving summary: {str(e)}")
+
+    def save_prompt_data(self, prompt_data: Dict):
+        """Save the generated prompt data to test_case_generator.md"""
+        print("📝 Saving prompt data to test_case_generator.md...")
+
+        prompt_file = "prompts/test_case_generator.md"
+
+        try:
+            # Extract sample test cases for format reference
+            sample_test_cases = []
+            if prompt_data["existing_test_cases"]:
+                sample_test_cases = prompt_data["existing_test_cases"][
+                    :2
+                ]  # Get 2 samples
+
+            # Create the actionable prompt for Cursor AI
+            prompt_data_section = f"""# 🎯 Test Case Generation Prompt for Cursor AI
+
+## 📋 Your Task
+Generate around {prompt_data['config']['test_case_count']} comprehensive test cases for the feature described in the feature file. Follow the exact format and patterns found in the knowledge base.
+
+## 📁 Required Files to Analyze
+
+### 1. Knowledge Base (Test Case Format Reference)
+**File:** `knowledgebase/existing_test_cases.json`
+- Analyze this file to understand the EXACT test case format
+- Extract the JSON structure for test cases
+- Follow the same naming conventions, step patterns, and field structures
+- Currently contains {len(prompt_data['existing_test_cases'])} existing test cases as examples
+
+### 2. Feature Documentation
+**File:** `feature/example_feature.md` 
+- Read this file to understand the feature requirements
+- Extract all functional, security, and accessibility requirements
+- Identify user workflows and edge cases to test
+- Visit any links in the feature file to understand the feature requirements
+- **Extract reference ID** from the feature file to use in test case `refs` field
+
+### 3. Configuration Settings
+**File:** `configs/output_test_case_config.py`
+- Follow the test case distribution specified in this config
+- Adhere to priority distribution and test type requirements
+- Use `SIMILARITY_THRESHOLD` for duplicate detection
+
+## 🎨 Test Case Generation Requirements
+
+### Test Case Distribution
+Generate around {prompt_data['config']['test_case_count']} test cases with:
+- **Test Types:** {', '.join(prompt_data['config']['test_types'])}
+  - Distribute evenly across types, with emphasis on functional coverage
+- **Priority Distribution:**
+{chr(10).join([f"  - {priority}: {percentage}% ({int(prompt_data['config']['test_case_count'] * percentage / 100)} test cases)" for priority, percentage in prompt_data['config']['priority_distribution'].items()])}
+"""
+
+            # Only add accessibility section if it's in test types
+            if "accessibility" in prompt_data["config"]["test_types"] and prompt_data[
+                "config"
+            ].get("wcag_guideline"):
+                prompt_data_section += f"""
+### Accessibility Requirements
+- **WCAG Standard:** {prompt_data['config'].get('wcag_guideline', 'WCAG 2.2 AA')}
+- Include accessibility test cases covering:
+  - Screen reader compatibility
+  - Keyboard navigation
+  - Color contrast validation
+  - Focus management
+  - ARIA labels and roles
+"""
+
+            prompt_data_section += f"""
+
+## 📝 Test Case Format (MUST FOLLOW EXACTLY)
+
+Based on the knowledge base analysis and TestRail documentation, each test case MUST follow this simplified JSON structure:
+```json
+{{
+  "title": "Clear, descriptive title following naming convention",
+  "template_id": 2,
+  "type_id": 16,
+  "priority_id": 2,
+  "refs": "FEATURE-REF-ID",
+  "estimate": "5min",
+  "custom_preconds": "Required setup before test execution",
+  "custom_steps_separated": [
+    {{
+      "content": "Action to perform",
+      "expected": "Expected result"
+    }}
+  ],
+  "labels": []
+}}
+```
+
+### Field Descriptions (Based on TestRail Documentation):
+- **title**: Clear, descriptive title starting with "Verify that..." or "Verify..."
+- **template_id**: Always use 2 (for step-by-step test cases)
+- **type_id**: 16 (positive), 22 (negative), 3 (edge/accessibility)
+- **priority_id**: 1 (Low), 2 (Medium), 3 (High), 4 (Critical)
+- **refs**: Reference ID extracted from feature file (e.g., "LOGIN-001", "USER-12345")
+- **estimate**: Realistic time estimate (e.g., "5min", "10min", "15min")
+- **custom_preconds**: Clear preconditions required for test execution
+- **custom_steps_separated**: Array of steps with content and expected results
+- **labels**: Array of relevant tags for categorization
+
+## 🔍 Pattern Analysis from Knowledge Base
+
+### Detected Patterns to Follow:
+- **Naming Conventions:** {prompt_data['patterns'].get('naming_conventions', ['Use action-based titles'])[:3]}
+- **Common Step Patterns:** {prompt_data['patterns'].get('step_patterns', ['Navigate to page', 'Enter data', 'Verify result'])[:3]}
+- **Standard Preconditions:** {prompt_data['patterns'].get('common_preconditions', ['User is logged in', 'Test data is prepared'])[:3]}
+
+### Test Type Distribution in Knowledge Base:
+{chr(10).join([f"- {test_type}: {count} cases" for test_type, count in prompt_data['patterns'].get('types', {}).items()])}
+
+## 📊 Sample Test Case from Knowledge Base
+
+Study this example to understand the exact format and style:
+
+"""
+
+            # Add sample test case if available
+            if sample_test_cases:
+                sample = sample_test_cases[0]  # Use first sample
+                # Prepare sample data with proper escaping
+                sample_id = sample.get("id", 72645714)
+                sample_type_id = sample.get("type_id", 16)
+                sample_priority_id = sample.get("priority_id", 2)
+                sample_preconds = sample.get(
+                    "custom_preconds",
+                    "Duplicate inventory and imported font records in the Algolia enterprise index caused inconsistent search results.",
+                )
+                sample_steps = sample.get("custom_steps_separated", [])
+                sample_step_content = (
+                    sample_steps[0].get(
+                        "content",
+                        "From search tribe, get the json file containng duplicate font records in Algolia enterprise index.",
+                    )
+                    if sample_steps
+                    else "From search tribe, get the json file containng duplicate font records in Algolia enterprise index."
+                )
+                sample_step_expected = (
+                    sample_steps[0].get("expected", "") if sample_steps else ""
+                )
+                sample_title = sample.get(
+                    "title",
+                    "Verify data duplication is removed in Algolia's enterprise_search_index.",
+                )
+
+                # Prepare sample step data for the format example
+                sample_format_steps = sample.get("custom_steps_separated", [])
+                sample_format_step_content = (
+                    sample_format_steps[0].get("content", "Sample step")
+                    if sample_format_steps
+                    else "Sample step"
+                )
+                sample_format_step_expected = (
+                    sample_format_steps[0].get("expected", "Sample result")
+                    if sample_format_steps
+                    else "Sample result"
+                )
+
+                prompt_data_section += f"""```json
+{{
+  "title": "{sample.get('title', 'Sample Test Case')}",
+  "template_id": 2,
+  "type_id": {sample.get('type_id', 16)},
+  "priority_id": {sample.get('priority_id', 2)},
+  "refs": "{sample.get('refs', 'SAMPLE-001')}",
+  "estimate": "{sample.get('estimate', '5min')}",
+  "custom_preconds": "{sample.get('custom_preconds', 'Sample preconditions')}",
+  "custom_steps_separated": [
+    {{
+      "content": "{sample_format_step_content}",
+      "expected": "{sample_format_step_expected}"
+    }}
+  ],
+  "labels": []
+}}
+```
+"""
+            else:
+                # Initialize default values when no sample test cases are available
+                sample_id = 72645714
+                sample_type_id = 16
+                sample_priority_id = 2
+                sample_preconds = "Duplicate inventory and imported font records in the Algolia enterprise index caused inconsistent search results."
+                sample_step_content = "From search tribe, get the json file containng duplicate font records in Algolia enterprise index."
+                sample_step_expected = ""
+                sample_title = "Verify data duplication is removed in Algolia's enterprise_search_index."
+
+            # Build generation instructions
+            wcag_guideline = prompt_data["config"].get("wcag_guideline", "2.2 AA")
+            test_count = prompt_data["config"]["test_case_count"]
+            similarity_threshold = SIMILARITY_THRESHOLD
+
+            prompt_data_section += f"""
+
+## ⚙️ Generation Instructions
+
+1. **Read the feature file** (`feature/example_feature.md`) completely
+2. **Extract reference ID** from the feature file for use in `refs` field
+3. **Analyze the knowledge base** (`knowledgebase/existing_test_cases.json`) for format
+4. **Generate test cases** that:
+   - Cover all major user workflows
+   - Include positive, negative, edge cases"""
+
+            if "accessibility" in prompt_data["config"]["test_types"]:
+                prompt_data_section += f"""
+   - Add accessibility tests per WCAG {wcag_guideline}"""
+
+            prompt_data_section += f"""
+   - Follow the exact simplified JSON structure
+   - Use similar naming conventions and step patterns
+   - Include proper reference IDs
+
+5. **Output Format**: Generate a JSON array containing all test cases:
+```json
+[
+  {{ /* test case 1 */ }},
+  {{ /* test case 2 */ }},
+  // ... continue for all {test_count} test cases
+]
+```
+
+6. **Save the output** to: `target/generated_test_cases_[timestamp].json`
+
+## 🎯 Quality Checklist
+Ensure your generated test cases:
+- ✅ Follow the EXACT simplified format from knowledge base
+- ✅ Cover all requirements from the feature file
+- ✅ Include around {test_count} test cases total
+- ✅ Have proper distribution of priorities and types
+- ✅ Include comprehensive steps with clear expected results
+- ✅ Have relevant preconditions
+- ✅ Use consistent naming conventions
+- ✅ Are actionable and specific (no vague steps)
+- ✅ Include proper reference IDs from feature file"""
+
+            # Add accessibility checklist item only if needed
+            if "accessibility" in prompt_data["config"]["test_types"]:
+                prompt_data_section += """
+- ✅ Include accessibility tests for WCAG compliance"""
+
+            prompt_data_section += f"""
+
+## 📌 Important Notes
+- Each test case must be independent and executable
+- Include specific test data values, not placeholders
+- Ensure steps are detailed enough for manual execution
+- Consider both happy path and error scenarios
+- Include boundary value tests for numeric inputs
+- Test required field validations
+- Verify error messages and user feedback
+- Use realistic time estimates based on test complexity
+
+## 🔍 Duplicate Detection (IMPORTANT)
+
+After generating the test cases, you MUST check for potential duplicates:
+
+### Steps for Duplicate Detection:
+
+1. **Load the knowledge base** (`knowledgebase/existing_test_cases.json`)
+2. **For each generated test case**, perform semantic analysis to check if similar test cases exist:
+   - Compare test titles for semantic similarity (not just exact match)
+   - Compare test objectives and scenarios
+   - Check if steps cover the same workflow
+   - Consider test cases duplicate if they:
+     - Test the same functionality with similar data
+     - Have similar titles and objectives
+     - Cover the same user journey/workflow
+
+3. **Identify potential duplicates** using these criteria:
+   - Title similarity >= {int(similarity_threshold * 100)}% (semantic, not just text matching)
+   - Same test type and priority
+   - Similar preconditions and test data
+   - Steps that test the same functionality
+   - **Similarity Threshold**: Use `SIMILARITY_THRESHOLD` from config ({similarity_threshold:.2f})
+
+4. **Save ONLY potential duplicates** to `target/possible_duplicate_cases.json`:
+```json
+{{
+  "existing_test_cases": [
+    // Existing test cases from knowledge base that are similar to the generated test cases with similarity >= {similarity_threshold:.2f})
+    {{
+      "id": {sample_id},
+      "title": "{sample_title}",
+      "type_id": {sample_type_id},
+      "priority_id": {sample_priority_id},
+      "custom_preconds": "{sample_preconds}",
+      "custom_steps_separated": [
+        {{
+          "content": "{sample_step_content}",
+          "expected": "{sample_step_expected}"
+        }}
+      ],
+      "labels": []
+    }}
+  ],
+  "new_test_cases": [
+    // ONLY test cases with similarity >= {similarity_threshold:.2f}
+    {{
+      "id": 100001,
+      "title": "New test case title",
+      "type_id": 16,
+      "priority_id": 2,
+      "custom_preconds": "Preconditions for the test",
+      "custom_steps_separated": [
+        {{
+          "content": "Test step content",
+          "expected": "Expected result"
+        }}
+      ],
+      "labels": ["tag1", "tag2"],
+      "similarity_score": 0.87,  // Only if similarity >= {similarity_threshold:.2f}
+      "similarity_reasons": [     // Only if similarity >= {similarity_threshold:.2f}
+        "Similar title and objective",
+        "Same workflow tested",
+        "Overlapping test data"
+      ],
+      "similar_to_existing_id": {sample_test_cases[0].get('id', 72645714) if sample_test_cases else 72645714}  // Only if similarity >= {similarity_threshold:.2f}
+    }}
+  ]
+}}
+```
+
+5. **Final output structure**:
+   - Save ALL generated test cases to: `target/generated_test_cases.json`
+   - Save ONLY potential duplicates (similarity >= threshold) to: `target/possible_duplicate_cases.json`
+   - Include similarity scores and reasons for each potential duplicate
+
+### Duplicate Detection Algorithm:
+- Use semantic comparison, not just string matching
+- Consider context and intent of test cases
+- Factor in test type, priority, and coverage area
+- A test is potentially duplicate if it tests the same scenario even with different steps
+- **Only save cases that meet or exceed the similarity threshold**
+
+### Important:
+- Only include test cases in duplicate analysis if similarity >= `SIMILARITY_THRESHOLD`
+- If no duplicates are found (all similarity scores < threshold), save empty arrays
+- Include detailed reasoning for why each case might be a duplicate
+- This helps maintain a clean, non-redundant test suite
+- Reference TestRail documentation for best practices: https://support.testrail.com/hc/en-us/articles/15760060756116-Creating-test-cases#creating-test-cases-with-exploratory-session-template-0-2
+"""
+
+            # Simply replace the entire content with the new actionable prompt
+            # This is now a complete, standalone prompt for Cursor AI
+            with open(prompt_file, "w", encoding="utf-8") as f:
+                f.write(prompt_data_section)
+
+            print(f"✅ Prompt data saved to {prompt_file}")
+
+        except Exception as e:
+            print(f"❌ Error saving prompt data: {str(e)}")
+            import traceback
+
+            traceback.print_exc()
+
+    def run_workflow(self):
+        """Run the complete prompt generation workflow for Cursor AI"""
+        print("🚀 Starting Prompt Generation Workflow for Cursor AI")
+        print("=" * 60)
+
+        # Step 1: Read and analyze knowledge base
+        existing_test_cases = self.read_knowledge_base()
+        patterns = self.analyze_test_case_patterns(existing_test_cases)
+
+        # Step 2: Read feature files
+        features = self.read_feature_files()
+        requirements = self.extract_feature_requirements(features)
+
+        # Step 3: Read configuration
+        config = self.read_configuration()
+
+        print("\n" + "=" * 60)
+        print("📋 Prompt Data Analysis Complete")
+        print("=" * 60)
+        print(f"📖 Knowledge Base: {len(existing_test_cases)} existing test cases")
+        print(f"📋 Features: {len(features)} feature files")
+        print(
+            f"⚙️  Configuration: {config['test_case_count']} test cases, {len(config['test_types'])} types"
+        )
+
+        # Create prompt data dictionary
+        prompt_data = {
+            "existing_test_cases": existing_test_cases,
+            "patterns": patterns,
+            "features": features,
+            "requirements": requirements,
+            "config": config,
+        }
+
+        # Step 4: Save prompt data to test_case_generator.md
+        self.save_prompt_data(prompt_data)
+
+        print("\n🎯 Prompt Data Ready for Cursor:")
+        print("1. Use the patterns and requirements above to generate test cases")
+        print("2. Follow the format from existing test cases")
+        print("3. Cover all test types and requirements")
+        print("4. Save to target folder")
+        print("5. Provide comprehensive coverage")
+
+        return prompt_data
+
+
+def main():
+    """Main entry point"""
+    orchestrator = PromptGeneratorOrchestrator()
+    orchestrator.run_workflow()
+
+    print("\n✅ Prompt data ready for Cursor AI execution!")
+    print(
+        "📝 Use the information above with the prompt in prompts/test_case_generator.md"
+    )
+
+
+if __name__ == "__main__":
+    main()

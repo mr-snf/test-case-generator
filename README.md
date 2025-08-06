@@ -38,6 +38,7 @@ Test-case-generator/
 ├── requirements.txt                # Python dependencies
 ├── pyproject.toml                  # Project configuration
 ├── env.example                     # Environment variables template
+├── LICENSE                         # MIT License file
 └── README.md                       # This file
 ```
 
@@ -308,7 +309,23 @@ The system includes comprehensive quality checks:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### License Summary
+The MIT License is a permissive open-source license that allows you to:
+- ✅ Use the software for any purpose
+- ✅ Modify the software
+- ✅ Distribute the software
+- ✅ Use it commercially
+- ✅ Use it privately
+- ✅ Sublicense it
+
+The only requirement is that the original license and copyright notice must be included in all copies or substantial portions of the software.
+
+### Copyright
+Copyright (c) 2024 Test Case Generator
+
+For more information about the MIT License, visit: https://opensource.org/licenses/MIT
 
 ## 🆘 Support
 
@@ -318,18 +335,3 @@ For support and questions:
 - Review the configuration documentation
 - Run the test suite to verify functionality
 
-## 🗺️ Roadmap
-
-- [x] TestRail API integration
-- [x] Pattern analysis and consistency
-- [x] Duplicate detection with similarity scoring
-- [x] Reference ID extraction from feature files
-- [x] Comprehensive test suite (174 tests)
-- [x] Configurable test case generation
-- [ ] Web-based UI for easier configuration
-- [ ] Batch processing of multiple features
-- [ ] Advanced similarity detection algorithms
-- [ ] Custom test case templates
-- [ ] Performance testing case generation
-- [ ] Security testing case generation
-- [ ] Integration with other test management tools 

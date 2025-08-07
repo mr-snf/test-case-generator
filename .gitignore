@@ -54,9 +54,6 @@ ehthumbs.db
 Thumbs.db
 
 # Generated files
-features/
-knowledgebase/
-prompts/test_case_generator.md
 target/
 
 

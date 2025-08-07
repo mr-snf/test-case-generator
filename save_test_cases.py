@@ -7,7 +7,7 @@ import sys
 import json
 from typing import List, Dict, Optional
 
-from src.testrail_api import TestRailAPI
+from src.testrail import TestRailAPI
 from configs.config import PROJECT_ID, SUITE_ID, TARGET_SECTION_ID
 
 

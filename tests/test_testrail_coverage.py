@@ -5,8 +5,8 @@ Additional tests to improve coverage for TestRail API and client modules.
 import pytest
 from unittest.mock import Mock, patch, mock_open
 
-from src.testrail_api import TestRailAPI
-from src.testrail_client import APIClient, APIError
+from src.testrail.client import APIClient, APIError
+from src.testrail.api import TestRailAPI
 
 
 class TestTestRailAPICoverage:
@@ -18,7 +18,7 @@ class TestTestRailAPICoverage:
         return TestRailAPI()
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_suites_error(self, mock_client_class, api_client):
         """Test get_suites with API error"""
         mock_client = Mock()
@@ -30,7 +30,7 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_sections_error(self, mock_client_class, api_client):
         """Test get_sections with API error"""
         mock_client = Mock()
@@ -42,7 +42,7 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_cases_error(self, mock_client_class, api_client):
         """Test get_cases with API error"""
         mock_client = Mock()
@@ -54,7 +54,165 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_pagination_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases pagination for coverage"""
+        # Setup mock to return different responses for each call
+        mock_client = Mock()
+
+        # First call: return 250 cases (full page)
+        first_page = [{"id": i, "title": f"Test Case {i}"} for i in range(1, 251)]
+        # Second call: return 100 cases (partial page - end of results)
+        second_page = [{"id": i, "title": f"Test Case {i}"} for i in range(251, 351)]
+
+        mock_client.send_get.side_effect = [first_page, second_page]
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert len(result) == 350  # 250 + 100
+        assert mock_client.send_get.call_count == 2
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_dict_response_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases with dict response format for coverage"""
+        # Setup mock
+        mock_client = Mock()
+        cases_data = [
+            {"id": 1, "title": "Test Case 1"},
+            {"id": 2, "title": "Test Case 2"},
+        ]
+        dict_response = {"cases": cases_data}
+
+        mock_client.send_get.return_value = dict_response
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert result == cases_data
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_data_key_response_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases with 'data' key response format for coverage"""
+        # Setup mock
+        mock_client = Mock()
+        cases_data = [
+            {"id": 1, "title": "Test Case 1"},
+            {"id": 2, "title": "Test Case 2"},
+        ]
+        dict_response = {"data": cases_data}
+
+        mock_client.send_get.return_value = dict_response
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert result == cases_data
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_single_dict_response_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases with single dict response for coverage"""
+        # Setup mock
+        mock_client = Mock()
+        single_case = {"id": 1, "title": "Single Test Case"}
+
+        mock_client.send_get.return_value = single_case
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert result == [single_case]  # Should be wrapped in a list
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_empty_response_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases with empty response for coverage"""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.send_get.return_value = []
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert result == []
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_unexpected_response_type_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases with unexpected response type for coverage"""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.send_get.return_value = "unexpected_string_response"
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions
+        assert result == []
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
+    @patch("builtins.print")
+    def test_get_cases_safety_limit_coverage(
+        self, mock_print, mock_client_class, api_client
+    ):
+        """Test get_cases safety limit for coverage"""
+        # Setup mock to return full pages indefinitely
+        mock_client = Mock()
+        full_page = [{"id": i, "title": f"Test Case {i}"} for i in range(1, 251)]
+        mock_client.send_get.return_value = full_page
+        mock_client_class.return_value = mock_client
+        api_client.client = mock_client
+
+        # Test
+        result = api_client.get_cases(1)
+
+        # Assertions - should stop at safety limit (10000 offset)
+        # With limit=250, this means 41 calls (10000/250 + 1 for the final check)
+        # The last call adds 250 more cases before the safety limit is hit
+        assert mock_client.send_get.call_count == 41
+        assert len(result) == 10250  # 41 * 250 (the last call adds 250 more cases)
+
+    @pytest.mark.unit
+    @patch("src.testrail.api.APIClient")
     def test_get_case_success(self, mock_client_class, api_client):
         """Test get_case success"""
         mock_client = Mock()
@@ -67,7 +225,7 @@ class TestTestRailAPICoverage:
         mock_client.send_get.assert_called_once_with("get_case/1")
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_case_error(self, mock_client_class, api_client):
         """Test get_case with API error"""
         mock_client = Mock()
@@ -79,7 +237,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_update_case_success(self, mock_client_class, api_client):
         """Test update_case success"""
         mock_client = Mock()
@@ -93,7 +251,7 @@ class TestTestRailAPICoverage:
         mock_client.send_post.assert_called_once_with("update_case/1", case_data)
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_update_case_error(self, mock_client_class, api_client):
         """Test update_case with API error"""
         mock_client = Mock()
@@ -105,7 +263,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_delete_case_success(self, mock_client_class, api_client):
         """Test delete_case success"""
         mock_client = Mock()
@@ -118,7 +276,7 @@ class TestTestRailAPICoverage:
         mock_client.send_post.assert_called_once_with("delete_case/1", {})
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_delete_case_error(self, mock_client_class, api_client):
         """Test delete_case with API error"""
         mock_client = Mock()
@@ -130,7 +288,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_add_section_success(self, mock_client_class, api_client):
         """Test add_section success"""
         mock_client = Mock()
@@ -144,7 +302,7 @@ class TestTestRailAPICoverage:
         mock_client.send_post.assert_called_once_with("add_section/1", section_data)
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_add_section_error(self, mock_client_class, api_client):
         """Test add_section with API error"""
         mock_client = Mock()
@@ -156,7 +314,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_update_section_success(self, mock_client_class, api_client):
         """Test update_section success"""
         mock_client = Mock()
@@ -170,7 +328,7 @@ class TestTestRailAPICoverage:
         mock_client.send_post.assert_called_once_with("update_section/1", section_data)
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_update_section_error(self, mock_client_class, api_client):
         """Test update_section with API error"""
         mock_client = Mock()
@@ -182,7 +340,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_delete_section_success(self, mock_client_class, api_client):
         """Test delete_section success"""
         mock_client = Mock()
@@ -195,7 +353,7 @@ class TestTestRailAPICoverage:
         mock_client.send_post.assert_called_once_with("delete_section/1", {})
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_delete_section_error(self, mock_client_class, api_client):
         """Test delete_section with API error"""
         mock_client = Mock()
@@ -207,7 +365,7 @@ class TestTestRailAPICoverage:
         assert result == {}
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_case_fields_error(self, mock_client_class, api_client):
         """Test get_case_fields with API error"""
         mock_client = Mock()
@@ -219,7 +377,7 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_priorities_error(self, mock_client_class, api_client):
         """Test get_priorities with API error"""
         mock_client = Mock()
@@ -231,7 +389,7 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_get_case_types_error(self, mock_client_class, api_client):
         """Test get_case_types with API error"""
         mock_client = Mock()
@@ -243,7 +401,7 @@ class TestTestRailAPICoverage:
         assert result == []
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_test_connection_success(self, mock_client_class, api_client):
         """Test test_connection success"""
         mock_client = Mock()
@@ -255,7 +413,7 @@ class TestTestRailAPICoverage:
         assert result is True
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_test_connection_no_projects(self, mock_client_class, api_client):
         """Test test_connection with no projects"""
         mock_client = Mock()
@@ -267,7 +425,7 @@ class TestTestRailAPICoverage:
         assert result is False
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     def test_test_connection_error(self, mock_client_class, api_client):
         """Test test_connection with API error"""
         mock_client = Mock()
@@ -279,7 +437,7 @@ class TestTestRailAPICoverage:
         assert result is False
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     @patch("builtins.print")
     def test_test_connection_success_with_print(
         self, mock_print, mock_client_class, api_client
@@ -297,7 +455,7 @@ class TestTestRailAPICoverage:
         )
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     @patch("builtins.print")
     def test_test_connection_no_projects_with_print(
         self, mock_print, mock_client_class, api_client
@@ -313,7 +471,7 @@ class TestTestRailAPICoverage:
         mock_print.assert_called_with("Connected to TestRail but no projects found.")
 
     @pytest.mark.unit
-    @patch("src.testrail_api.APIClient")
+    @patch("src.testrail.api.APIClient")
     @patch("builtins.print")
     def test_test_connection_error_with_print(
         self, mock_print, mock_client_class, api_client

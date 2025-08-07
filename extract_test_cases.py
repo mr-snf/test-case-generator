@@ -5,7 +5,7 @@ Script to extract all test cases from TestRail and save them to knowledgebase fo
 import os
 import sys
 from typing import List, Dict
-from src.testrail_api import TestRailAPI
+from src.testrail import TestRailAPI
 from configs.config import (
     TESTRAIL_URL,
     PROJECT_ID,
@@ -35,14 +35,14 @@ def extract_test_cases():
         print("Testing TestRail connection...")
         projects_response = testrail_api.get_projects()
         print(f"Connected successfully. Found {len(projects_response)} projects.")
-        
+
         # Handle different response formats
         if isinstance(projects_response, dict):
             # If it's a dictionary, it might contain projects in a specific key
-            if 'projects' in projects_response:
-                projects = projects_response['projects']
-            elif 'data' in projects_response:
-                projects = projects_response['data']
+            if "projects" in projects_response:
+                projects = projects_response["projects"]
+            elif "data" in projects_response:
+                projects = projects_response["data"]
             else:
                 # If it's a dict but no obvious key, treat it as a single project
                 projects = [projects_response]
@@ -52,7 +52,7 @@ def extract_test_cases():
             print(f"Unexpected response type: {type(projects_response)}")
             print(f"Response content: {projects_response}")
             return
-        
+
         # Get project info
         project_info = None
         for project in projects:
@@ -97,6 +97,7 @@ def extract_test_cases():
     except Exception as e:
         print(f"Error extracting test cases: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -119,7 +120,7 @@ def create_extraction_summary(test_cases: List[Dict]) -> str:
         elif not isinstance(case, dict):
             print(f"Warning: Test case is not a dict: {type(case)} - {case}")
             continue
-            
+
         # Priority
         priority = case.get("priority_id", "Unknown")
         priority_counts[priority] = priority_counts.get(priority, 0) + 1

@@ -155,7 +155,7 @@ class TestExtractTestCases:
 
         # Verify directory creation (should still happen)
         mock_makedirs.assert_called_once_with("knowledgebase", exist_ok=True)
-        
+
         # Note: When no test cases are found, no file is written
         # So we don't expect mock_file to be called
 

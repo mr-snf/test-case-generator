@@ -229,7 +229,10 @@ class TestPromptGeneratorOrchestrator:
 
     @pytest.mark.unit
     @patch("generate_prompt.DEFAULT_TEST_CASES_COUNT", 15)
-    @patch("generate_prompt.DEFAULT_TEST_TYPES", ["positive", "negative", "edge", "accessibility"])
+    @patch(
+        "generate_prompt.DEFAULT_TEST_TYPES",
+        ["positive", "negative", "edge", "accessibility"],
+    )
     @patch(
         "generate_prompt.DEFAULT_PRIORITY_DISTRIBUTION",
         {"High": 40, "Medium": 40, "Low": 20},

@@ -7,7 +7,7 @@ import json
 import os
 from typing import List, Dict, Optional
 
-from src.testrail_client import APIClient
+from .client import APIClient
 from configs.config import (
     TESTRAIL_URL,
     TESTRAIL_USERNAME,
@@ -70,20 +70,71 @@ class TestRailAPI:
         suite_id: Optional[int] = None,
         section_id: Optional[int] = None,
     ) -> List[Dict]:
-        """Get all test cases for a project, suite, and/or section"""
+        """Get all test cases for a project, suite, and/or section with pagination"""
         try:
-            endpoint = f"get_cases/{project_id}"
-            params = []
+            all_cases = []
+            offset = 0
+            limit = 250
+            total_cases = 0
 
-            if suite_id:
-                params.append(f"suite_id={suite_id}")
-            if section_id:
-                params.append(f"section_id={section_id}")
+            while True:
+                # Build endpoint with proper URL parameter construction
+                endpoint = f"get_cases/{project_id}"
+                params = [f"limit={limit}", f"offset={offset}"]
 
-            if params:
-                endpoint += "&" + "&".join(params)
+                if suite_id:
+                    params.append(f"suite_id={suite_id}")
+                if section_id:
+                    params.append(f"section_id={section_id}")
 
-            return self.client.send_get(endpoint)
+                # Construct URL with parameters
+                if params:
+                    endpoint += "&" + "&".join(params)
+
+                print(f"Fetching cases: offset={offset}, limit={limit}")
+                response = self.client.send_get(endpoint)
+
+                # Handle different response formats more robustly
+                if isinstance(response, dict):
+                    if "cases" in response:
+                        cases = response["cases"]
+                    elif "data" in response:
+                        cases = response["data"]
+                    else:
+                        # If it's a dict but no obvious key, treat it as a single test case
+                        cases = [response]
+                elif isinstance(response, list):
+                    cases = response
+                else:
+                    print(f"Unexpected response type: {type(response)}")
+                    print(f"Response content: {response}")
+                    break
+
+                if not cases:
+                    print(f"No cases returned at offset {offset}")
+                    break
+
+                all_cases.extend(cases)
+                total_cases += len(cases)
+                print(f"Retrieved {len(cases)} cases, total so far: {total_cases}")
+
+                # Check if we've reached the end (less than limit returned)
+                if len(cases) < limit:
+                    print(
+                        f"Reached end of results. Total cases retrieved: {total_cases}"
+                    )
+                    break
+
+                offset += limit
+
+                # Safety check to prevent infinite loops
+                if offset > 10000:  # Arbitrary large number
+                    print(
+                        f"Safety limit reached at offset {offset}. Stopping pagination."
+                    )
+                    break
+
+            return all_cases
         except Exception as e:
             print(f"Error getting cases: {str(e)}")
             return []
@@ -206,14 +257,14 @@ class TestRailAPI:
         try:
             # Get all test cases for the project
             response = self.get_cases(project_id)
-            
+
             # Handle different response formats
             if isinstance(response, dict):
                 # If it's a dictionary, check if it contains cases in a specific key
-                if 'cases' in response:
-                    test_cases = response['cases']
-                elif 'data' in response:
-                    test_cases = response['data']
+                if "cases" in response:
+                    test_cases = response["cases"]
+                elif "data" in response:
+                    test_cases = response["data"]
                 else:
                     # If it's a dict but no obvious key, treat it as a single test case
                     test_cases = [response]

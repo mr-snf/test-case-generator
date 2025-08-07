@@ -203,19 +203,19 @@ class TestOutputFormatter:
                     {"content": "Step 1", "expected": "Result 1"},
                 ],
                 "similarity_score": 0.75,
-            }
+            },
         ]
 
         result = formatter.format_for_testrail(mixed_test_cases)
 
         assert len(result) == 2
-        
+
         # First case should be formatted from standard to TestRail
         assert result[0]["title"] == "Standard Format Test"
         assert result[0]["type_id"] == 1
         assert result[0]["priority_id"] == 3
         assert result[0]["custom_preconds"] == "Setup required"
-        
+
         # Second case should remain in TestRail format with fields added/removed
         assert result[1]["title"] == "TestRail Format Test"
         assert result[1]["type_id"] == 1

@@ -130,30 +130,49 @@ class TestConfig:
         import os
         import shutil
         import tempfile
-        
+
         # Temporarily move the .env file
-        env_file_path = os.path.join(os.getcwd(), '.env')
+        env_file_path = os.path.join(os.getcwd(), ".env")
         temp_env_path = None
-        
+
         if os.path.exists(env_file_path):
             temp_env_path = tempfile.mktemp()
             shutil.move(env_file_path, temp_env_path)
-        
+
         try:
             # Clear dotenv cache and reload the config module
             import importlib
             import configs.config
-            
+
             # Reload the config module
             importlib.reload(configs.config)
 
             # Should use default values
-            assert configs.config.TESTRAIL_URL == "https://your-domain.testrail.io"
-            assert configs.config.TESTRAIL_USERNAME == "your-email@domain.com"
-            assert configs.config.TESTRAIL_PASSWORD == "your-api-key-or-password"
+            assert (
+                configs.config.TESTRAIL_URL
+                == "https://you-forgot-to-set-this.testrail.io"
+            )
+            assert (
+                configs.config.TESTRAIL_USERNAME
+                == "i-do-not-know@your-testrail-account.com"
+            )
+            assert (
+                configs.config.TESTRAIL_PASSWORD
+                == "what-is-your-testrail-api-key-or-password?"
+            )
             assert configs.config.PROJECT_ID == 1
             assert configs.config.SUITE_ID == 1
             assert configs.config.TARGET_SECTION_ID == 1
+            assert (
+                configs.config.JIRA_URL
+                == "https://you-forgot-to-set-this.atlassian.net"
+            )
+            assert configs.config.JIRA_USERNAME == "i-do-not-know@your-jira-account.com"
+            assert (
+                configs.config.JIRA_API_TOKEN
+                == "what-is-your-jira-api-key-or-password?"
+            )
+            assert configs.config.JIRA_TICKET_ID == "what-is-the-jira-ticket-id-001"
         finally:
             # Restore the .env file
             if temp_env_path and os.path.exists(temp_env_path):

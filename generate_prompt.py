@@ -25,6 +25,8 @@ class PromptGeneratorOrchestrator:
         self.knowledge_base_file = "knowledgebase/existing_test_cases.json"
         self.feature_dir = "feature"
         self.target_dir = "target"
+        self.prompts_dir = "prompts"
+        self.prompt_file = os.path.join(self.prompts_dir, "test_case_generator.md")
         self.config_file = (
             "configs/output_test_case_config.py"  # For backward compatibility
         )
@@ -285,8 +287,8 @@ class PromptGeneratorOrchestrator:
             if WCAG_GUIDLINE:
                 config["wcag_guideline"] = WCAG_GUIDLINE
             else:
-                config["wcag_guideline"] = "WCAG 2.2 AA"  # Default
-                print("   ⚠️  WCAG Guideline not set, using default: WCAG 2.2 AA")
+                config["wcag_guideline"] = "WCAG 2.1 AA"  # Default
+                print("   ⚠️  WCAG Guideline not set, using default: WCAG 2.1 AA")
 
         print(f"✅ Loaded configuration:")
         print(f"   - Test case count: {config['test_case_count']}")
@@ -359,8 +361,6 @@ Breakdown by Type:
         """Save the generated prompt data to test_case_generator.md"""
         print("📝 Saving prompt data to test_case_generator.md...")
 
-        prompt_file = "prompts/test_case_generator.md"
-
         try:
             # Extract sample test cases for format reference
             sample_test_cases = []
@@ -375,22 +375,29 @@ Breakdown by Type:
 ## 📋 Your Task
 Generate around {prompt_data['config']['test_case_count']} comprehensive test cases for the feature described in the feature file. Follow the exact format and patterns found in the knowledge base.
 
+## 📁 File Access
+The following files are accessible via `@` references for efficient large file handling:
+1. **@knowledgebase/existing_test_cases.json** - Contains existing test cases for format reference
+2. **@feature/*.md** - Feature documentation files
+
 ## 📁 Required Files to Analyze
 
 ### 1. Knowledge Base (Test Case Format Reference)
-**File:** `knowledgebase/existing_test_cases.json`
+**File:** @knowledgebase/existing_test_cases.json
+- Read this file and get the idea of the different pages elements, steps, and expected results in the application
+- Analyze the steps and expected results for each type of test case
 - Analyze this file to understand the EXACT test case format
 - Extract the JSON structure for test cases
 - Follow the same naming conventions, step patterns, and field structures
 - Currently contains {len(prompt_data['existing_test_cases'])} existing test cases as examples
 
 ### 2. Feature Documentation
-**File:** `feature/example_feature.md` 
-- Read this file to understand the feature requirements
+**Files:** `feature/` 
+- Read all the files in the feature folder to understand the feature requirements
 - Extract all functional, security, and accessibility requirements
 - Identify user workflows and edge cases to test
-- Visit any links in the feature file to understand the feature requirements
-- **Extract reference ID** from the feature file to use in test case `refs` field
+- Visit any links in the feature files to understand the feature requirements
+- **Extract Ticket ID** from the feature file to use in test case `refs` field
 
 ### 3. Configuration Settings
 **File:** `configs/output_test_case_config.py`
@@ -414,7 +421,7 @@ Generate around {prompt_data['config']['test_case_count']} test cases with:
             ].get("wcag_guideline"):
                 prompt_data_section += f"""
 ### Accessibility Requirements
-- **WCAG Standard:** {prompt_data['config'].get('wcag_guideline', 'WCAG 2.2 AA')}
+- **WCAG Standard:** {prompt_data['config'].get('wcag_guideline', 'WCAG 2.1 AA')}
 - Include accessibility test cases covering:
   - Screen reader compatibility
   - Keyboard navigation
@@ -434,7 +441,7 @@ Based on the knowledge base analysis and TestRail documentation, each test case 
   "template_id": 2,
   "type_id": 16,
   "priority_id": 2,
-  "refs": "FEATURE-REF-ID",
+  "refs": "TICKET-ID",
   "estimate": "5min",
   "custom_preconds": "Required setup before test execution",
   "custom_steps_separated": [
@@ -452,7 +459,7 @@ Based on the knowledge base analysis and TestRail documentation, each test case 
 - **template_id**: Always use 2 (for step-by-step test cases)
 - **type_id**: 16 (positive), 22 (negative), 3 (edge/accessibility)
 - **priority_id**: 1 (Low), 2 (Medium), 3 (High), 4 (Critical)
-- **refs**: Reference ID extracted from feature file (e.g., "LOGIN-001", "USER-12345")
+- **refs**: Ticket ID extracted from feature file (e.g., "TICKET-001", "TICKET-12345")
 - **estimate**: Realistic time estimate (e.g., "5min", "10min", "15min")
 - **custom_preconds**: Clear preconditions required for test execution
 - **custom_steps_separated**: Array of steps with content and expected results
@@ -483,23 +490,23 @@ Study this example to understand the exact format and style:
                 sample_priority_id = sample.get("priority_id", 2)
                 sample_preconds = sample.get(
                     "custom_preconds",
-                    "Duplicate inventory and imported font records in the Algolia enterprise index caused inconsistent search results.",
+                    "The logged in user is a sales admin or a system admin",
                 )
                 sample_steps = sample.get("custom_steps_separated", [])
                 sample_step_content = (
                     sample_steps[0].get(
                         "content",
-                        "From search tribe, get the json file containng duplicate font records in Algolia enterprise index.",
+                        "From the search results, click + icon for a fontfamily to add it to projects",
                     )
                     if sample_steps
-                    else "From search tribe, get the json file containng duplicate font records in Algolia enterprise index."
+                    else "From the search results, click + icon for a fontfamily to add it to projects"
                 )
                 sample_step_expected = (
                     sample_steps[0].get("expected", "") if sample_steps else ""
                 )
                 sample_title = sample.get(
                     "title",
-                    "Verify data duplication is removed in Algolia's enterprise_search_index.",
+                    "Verify that the fontfamily is added to projects",
                 )
 
                 # Prepare sample step data for the format example
@@ -539,10 +546,12 @@ Study this example to understand the exact format and style:
                 sample_id = 72645714
                 sample_type_id = 16
                 sample_priority_id = 2
-                sample_preconds = "Duplicate inventory and imported font records in the Algolia enterprise index caused inconsistent search results."
-                sample_step_content = "From search tribe, get the json file containng duplicate font records in Algolia enterprise index."
+                sample_preconds = (
+                    "The logged in user is a sales admin or a system admin"
+                )
+                sample_step_content = "From the search results, click + icon for a fontfamily to add it to projects"
                 sample_step_expected = ""
-                sample_title = "Verify data duplication is removed in Algolia's enterprise_search_index."
+                sample_title = "Verify that the fontfamily is added to projects"
 
             # Build generation instructions
             wcag_guideline = prompt_data["config"].get("wcag_guideline", "2.2 AA")
@@ -553,9 +562,9 @@ Study this example to understand the exact format and style:
 
 ## ⚙️ Generation Instructions
 
-1. **Read the feature file** (`feature/example_feature.md`) completely
-2. **Extract reference ID** from the feature file for use in `refs` field
-3. **Analyze the knowledge base** (`knowledgebase/existing_test_cases.json`) for format
+1. **Read the all the files in the feature folder** (`feature/`) completely
+2. **Extract Ticket ID** from the feature file for use in `refs` field
+3. **Analyze the knowledge base** (@knowledgebase/existing_test_cases.json) for format
 4. **Generate test cases** that:
    - Cover all major user workflows
    - Include positive, negative, edge cases"""
@@ -578,7 +587,7 @@ Study this example to understand the exact format and style:
 ]
 ```
 
-6. **Save the output** to: `target/generated_test_cases_[timestamp].json`
+6. **Save the output** to: `target/generated_test_cases.json`
 
 ## 🎯 Quality Checklist
 Ensure your generated test cases:
@@ -615,7 +624,7 @@ After generating the test cases, you MUST check for potential duplicates:
 
 ### Steps for Duplicate Detection:
 
-1. **Load the knowledge base** (`knowledgebase/existing_test_cases.json`)
+1. **Load the knowledge base** (@knowledgebase/existing_test_cases.json)
 2. **For each generated test case**, perform semantic analysis to check if similar test cases exist:
    - Compare test titles for semantic similarity (not just exact match)
    - Compare test objectives and scenarios
@@ -626,7 +635,7 @@ After generating the test cases, you MUST check for potential duplicates:
      - Cover the same user journey/workflow
 
 3. **Identify potential duplicates** using these criteria:
-   - Title similarity >= {int(similarity_threshold * 100)}% (semantic, not just text matching)
+   - Title similarity >= {int(similarity_threshold * 100)}% (semantic, not text matching)
    - Same test type and priority
    - Similar preconditions and test data
    - Steps that test the same functionality
@@ -699,12 +708,15 @@ After generating the test cases, you MUST check for potential duplicates:
 - Reference TestRail documentation for best practices: https://support.testrail.com/hc/en-us/articles/15760060756116-Creating-test-cases#creating-test-cases-with-exploratory-session-template-0-2
 """
 
+            # Ensure the prompts directory exists
+            os.makedirs(self.prompts_dir, exist_ok=True)
+
             # Simply replace the entire content with the new actionable prompt
             # This is now a complete, standalone prompt for Cursor AI
-            with open(prompt_file, "w", encoding="utf-8") as f:
+            with open(self.prompt_file, "w", encoding="utf-8") as f:
                 f.write(prompt_data_section)
 
-            print(f"✅ Prompt data saved to {prompt_file}")
+            print(f"✅ Prompt data saved to {self.prompt_file}")
 
         except Exception as e:
             print(f"❌ Error saving prompt data: {str(e)}")

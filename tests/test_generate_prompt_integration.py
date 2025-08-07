@@ -256,8 +256,14 @@ DEFAULT_PRIORITY_DISTRIBUTION=High:25,Medium:45,Low:20,Critical:10
 
         # Mock the imported constants to match the test expectations
         with patch("generate_prompt.DEFAULT_TEST_CASES_COUNT", 20):
-            with patch("generate_prompt.DEFAULT_TEST_TYPES", ["positive", "negative", "edge", "accessibility", "performance"]):
-                with patch("generate_prompt.DEFAULT_PRIORITY_DISTRIBUTION", {"High": 25, "Medium": 45, "Low": 20, "Critical": 10}):
+            with patch(
+                "generate_prompt.DEFAULT_TEST_TYPES",
+                ["positive", "negative", "edge", "accessibility", "performance"],
+            ):
+                with patch(
+                    "generate_prompt.DEFAULT_PRIORITY_DISTRIBUTION",
+                    {"High": 25, "Medium": 45, "Low": 20, "Critical": 10},
+                ):
                     config = orchestrator.read_configuration()
 
                     # Verify configuration parsing

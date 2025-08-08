@@ -256,7 +256,7 @@ class TestPromptGeneratorOrchestrator:
         """Test configuration reading with default values"""
         config = orchestrator.read_configuration()
 
-        assert config["test_case_count"] > 10
+        assert config["test_case_count"] > 0
         assert set(config["test_types"]).issubset(
             {"positive", "negative", "edge", "accessibility"}
         )

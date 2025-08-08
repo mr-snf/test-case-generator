@@ -3,7 +3,6 @@ Shared pytest fixtures and configuration for test suite.
 """
 
 import os
-import sys
 import pytest
 
 
@@ -171,3 +170,58 @@ def mock_api_responses():
         ],
         "types": [{"id": 1, "name": "Functional"}, {"id": 2, "name": "Accessibility"}],
     }
+
+
+@pytest.fixture(scope="session")
+def sample_test_cases_varied_templates():
+    """Sample cases covering multiple TestRail templates and field styles."""
+    return [
+        # Step-based template (template_id 2)
+        {
+            "id": 101,
+            "template_id": 2,
+            "title": "Checkout: Successful purchase",
+            "type_id": 16,
+            "priority_id": 3,
+            "refs": "ECOM-1001",
+            "estimate": "10min",
+            "custom_preconds": '{"cart": {"items": 3}}',
+            "custom_steps_separated": [
+                {"content": "Go to cart", "expected": "Cart page visible"},
+                {"content": "Click checkout", "expected": "Checkout page visible"},
+            ],
+            "labels": ["checkout", "e2e"],
+            "custom_automation_type": 1,
+            "custom_platforms": 2,
+        },
+        # Text-based (exploratory) template using custom_steps/custom_expected
+        {
+            "id": 102,
+            "template_id": 3,
+            "title": "Exploratory: Profile settings",
+            "type_id": 25,
+            "priority_id": 2,
+            "refs": "USR-2002",
+            "estimate": "15min",
+            "custom_preconds": "User logged in",
+            "custom_steps": "Explore profile tabs and toggles",
+            "custom_expected": "No errors, settings are persisted",
+            "custom_mission": "Discover usability issues",
+            "custom_goals": "Coverage of core profile actions",
+            "custom_levels": 1,
+        },
+        # BDD/Scenario template with scenario text field
+        {
+            "id": 103,
+            "template_id": 7,
+            "title": "BDD: Password reset",
+            "type_id": 9,
+            "priority_id": 1,
+            "refs": "AUTH-3003",
+            "estimate": "5min",
+            "custom_testrail_bdd_scenario": "Given a user, When password reset requested, Then email sent",
+            "labels": ["bdd"],
+            "custom_operatingsystem": 4,
+            "custom_testtype": ["smoke", "regression"],
+        },
+    ]

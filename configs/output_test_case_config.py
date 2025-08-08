@@ -2,7 +2,7 @@
 # =======================================================
 
 # Default number of test cases to generate
-DEFAULT_TEST_CASES_COUNT = 20
+DEFAULT_TEST_CASES_COUNT = 5
 
 # Default test types to generate (comma-separated)
 # Options: positive, negative, edge, accessibility

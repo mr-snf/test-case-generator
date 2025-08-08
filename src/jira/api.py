@@ -3,9 +3,9 @@ Jira API client for fetching ticket details.
 Uses the official Jira REST API.
 """
 
-import requests
-
 from typing import Dict
+
+import requests
 from requests.auth import HTTPBasicAuth
 
 

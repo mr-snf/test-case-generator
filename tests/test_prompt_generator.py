@@ -2,9 +2,9 @@
 Tests for the prompt generator functionality.
 """
 
-import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
+import pytest
 
 from generate_prompt import PromptGeneratorOrchestrator
 

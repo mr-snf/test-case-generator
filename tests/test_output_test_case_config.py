@@ -3,13 +3,14 @@ Tests for the output test case configuration module.
 """
 
 import os
-import pytest
 from unittest.mock import patch
 
+import pytest
+
 from configs.output_test_case_config import (
+    DEFAULT_PRIORITY_DISTRIBUTION,
     DEFAULT_TEST_CASES_COUNT,
     DEFAULT_TEST_TYPES,
-    DEFAULT_PRIORITY_DISTRIBUTION,
     WCAG_GUIDLINE,
 )
 
@@ -77,9 +78,9 @@ class TestOutputTestCaseConfig:
         """Test that config can be imported without errors"""
         try:
             from configs.output_test_case_config import (
+                DEFAULT_PRIORITY_DISTRIBUTION,
                 DEFAULT_TEST_CASES_COUNT,
                 DEFAULT_TEST_TYPES,
-                DEFAULT_PRIORITY_DISTRIBUTION,
                 WCAG_GUIDLINE,
             )
 

@@ -2,9 +2,10 @@
 Integration tests for the generate_prompt functionality.
 """
 
-import pytest
-from unittest.mock import Mock, patch, mock_open
 from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 
 from generate_prompt import PromptGeneratorOrchestrator
 

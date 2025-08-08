@@ -4,17 +4,17 @@ This script analyzes the project structure and generates comprehensive prompt da
 for Cursor AI to create test cases based on existing patterns and requirements.
 """
 
-import os
 import json
-from typing import List, Dict, Union, Any
+import os
 from pathlib import Path
+from typing import Any, Dict, List, Union
 
 from configs.output_test_case_config import (
+    DEFAULT_PRIORITY_DISTRIBUTION,
     DEFAULT_TEST_CASES_COUNT,
     DEFAULT_TEST_TYPES,
-    DEFAULT_PRIORITY_DISTRIBUTION,
-    WCAG_GUIDLINE,
     SIMILARITY_THRESHOLD,
+    WCAG_GUIDLINE,
 )
 
 

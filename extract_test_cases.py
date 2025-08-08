@@ -4,12 +4,13 @@ Script to extract all test cases from TestRail and save them to knowledgebase fo
 
 import os
 import sys
-from typing import List, Dict
-from src.testrail import TestRailAPI
+from typing import Dict, List
+
 from configs.config import (
-    TESTRAIL_URL,
     PROJECT_ID,
+    TESTRAIL_URL,
 )
+from src.testrail import TestRailAPI
 
 
 def extract_test_cases():

@@ -3,17 +3,18 @@ Tests for the configuration module.
 """
 
 import os
-import pytest
 from unittest.mock import patch
 
+import pytest
+
 from configs.config import (
-    TESTRAIL_URL,
-    TESTRAIL_USERNAME,
-    TESTRAIL_PASSWORD,
+    API_BASE_URL,
     PROJECT_ID,
     SUITE_ID,
     TARGET_SECTION_ID,
-    API_BASE_URL,
+    TESTRAIL_PASSWORD,
+    TESTRAIL_URL,
+    TESTRAIL_USERNAME,
 )
 
 
@@ -54,6 +55,7 @@ class TestConfig:
         """Test configuration with environment variables"""
         # Reload the config module to pick up new environment variables
         import importlib
+
         import configs.config
 
         importlib.reload(configs.config)
@@ -82,6 +84,7 @@ class TestConfig:
         with pytest.raises(ValueError, match="invalid literal for int"):
             # Reload the config module to pick up new environment variables
             import importlib
+
             import configs.config
 
             importlib.reload(configs.config)
@@ -142,6 +145,7 @@ class TestConfig:
         try:
             # Clear dotenv cache and reload the config module
             import importlib
+
             import configs.config
 
             # Reload the config module

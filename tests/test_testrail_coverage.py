@@ -2,11 +2,12 @@
 Additional tests to improve coverage for TestRail API and client modules.
 """
 
-import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
-from src.testrail.client import APIClient, APIError
+import pytest
+
 from src.testrail.api import TestRailAPI
+from src.testrail.client import APIClient, APIError
 
 
 class TestTestRailAPICoverage:

@@ -3,14 +3,14 @@ Fetch ticket details from Jira including descriptions and attachments.
 Uses configuration from configs/config.py
 """
 
+import json
 import os
 import sys
-import json
-
-from typing import Dict, List, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
+
+from configs.config import JIRA_API_TOKEN, JIRA_TICKET_ID, JIRA_URL, JIRA_USERNAME
 from src.jira import JiraAPI
-from configs.config import JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN, JIRA_TICKET_ID
 
 
 class TicketDetailsFetcher:

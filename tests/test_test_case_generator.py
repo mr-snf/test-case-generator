@@ -2,11 +2,12 @@
 Tests for the test case generation functionality.
 """
 
-import pytest
 import json
 import os
-from unittest.mock import Mock, patch, mock_open
 from datetime import datetime
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 
 
 class TestTestCaseGenerator:

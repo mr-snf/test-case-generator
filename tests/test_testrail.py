@@ -3,8 +3,9 @@ TestRail API client tests using pytest.
 """
 
 import os
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
-from unittest.mock import Mock, patch, mock_open
 
 from src.testrail import TestRailAPI
 
@@ -77,6 +78,7 @@ class TestTestRailAPI:
     def test_api_client_default_values(self):
         """Test default configuration values"""
         import importlib
+
         import configs.config
         import src.testrail.api
 

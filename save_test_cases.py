@@ -2,13 +2,13 @@
 Script to save test cases from target folder to TestRail.
 """
 
+import json
 import os
 import sys
-import json
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from src.testrail import TestRailAPI
 from configs.config import PROJECT_ID, SUITE_ID, TARGET_SECTION_ID
+from src.testrail import TestRailAPI
 
 
 class OutputFormatter:

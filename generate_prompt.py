@@ -603,10 +603,10 @@ Breakdown by Type:
 Generate around {prompt_data['config']['test_case_count']} comprehensive test cases for the feature described in the feature file. Follow the exact format and patterns found in the knowledge base.
 
 ## 📁 File Access
-The following files are accessible via `@` references for efficient large file handling:
-1. **@knowledgebase/existing_test_cases.json** - Existing cases for patterns and required fields
-2. **@target/generated_test_cases.json** - Recent generated cases to infer the exact authoring format
-3. **@feature/*.md** - Feature documentation files
+Use whichever path form your environment supports (both are equivalent):
+1. Knowledge base: `@knowledgebase/existing_test_cases.json` or `knowledgebase/existing_test_cases.json`
+2. Generated cases: `@target/generated_test_cases.json` or `target/generated_test_cases.json`
+3. Feature docs: `@feature/*.*` or `feature/*.*`
 
 ## 📁 Required Files to Analyze
 

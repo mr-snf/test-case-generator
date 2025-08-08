@@ -180,7 +180,7 @@ The generated prompt in `prompts/test_case_generator.md` contains:
 
 After you run `python generate_prompt.py`, a complete, ready-to-use prompt is written to `prompts/test_case_generator.md`.
 
-Steps to use it in Cursor:
+**Steps to use it in Cursor:**
 
 - Open `prompts/test_case_generator.md` and copy its entire content.
 - In Cursor, start a new chat with the AI.
@@ -190,10 +190,27 @@ OR
 
 - Simply write "Use the file @test_case_generator.md as your prompt and follow the instructions in it"
 
-- The prompt uses `@` file references (e.g., `@knowledgebase/existing_test_cases.json`, `@target/generated_test_cases.json`, `@feature/*.md`) so Cursor can load large files efficiently.
+- The prompt uses `@` file references (e.g., `@knowledgebase/existing_test_cases.json`, `@target/generated_test_cases.json`, `@feature/*.*`) so Cursor can load large files efficiently.
 - When the AI finishes generating the test cases, click "Keep All" to save the JSON array to `target/generated_test_cases.json`.
 
 Tip: If you change config in `configs/output_test_case_config.py` or update features/knowledge base, rerun `python generate_prompt.py` and paste the refreshed prompt again.
+
+**Using the Prompt in GitHub Copilot Chat (VS Code)**
+
+The generated prompt already includes dual path forms so it works in Copilot too. Steps:
+
+- Open `prompts/test_case_generator.md` and copy the prompt.
+- Paste it into Copilot Chat.
+
+OR
+
+- Simply attach the `test_case_generator.md` in the Co-pilot chat and write the prompt "use the content of the file as your prompt and follow the instructions in it"
+- Copilot can use either path form in the prompt:
+   - Knowledge base: `@knowledgebase/existing_test_cases.json` or `knowledgebase/existing_test_cases.json`
+   - Generated cases: `@target/generated_test_cases.json` or `target/generated_test_cases.json`
+   - Feature docs: `@feature/*.*` or `feature/*.*`
+4. Ask Copilot to read those files and generate the JSON array.
+5. Save to `target/generated_test_cases.json`. If needed, ask Copilot to return the JSON in one fenced block.
 
 ### 6. Save Test Cases to TestRail
 

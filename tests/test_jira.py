@@ -3,8 +3,9 @@ Jira API client tests using pytest.
 """
 
 import os
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
-from unittest.mock import Mock, patch, mock_open
 
 from src.jira import JiraAPI
 

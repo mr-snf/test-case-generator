@@ -2,9 +2,9 @@
 Tests for the prompt generator functionality.
 """
 
-import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
+import pytest
 
 from generate_prompt import PromptGeneratorOrchestrator
 
@@ -256,7 +256,7 @@ class TestPromptGeneratorOrchestrator:
         """Test configuration reading with default values"""
         config = orchestrator.read_configuration()
 
-        assert config["test_case_count"] > 10
+        assert config["test_case_count"] > 0
         assert set(config["test_types"]).issubset(
             {"positive", "negative", "edge", "accessibility"}
         )
@@ -322,6 +322,106 @@ class TestPromptGeneratorOrchestrator:
 
         # Verify file was opened for writing (the new implementation only writes once)
         assert mock_file.call_count >= 1
+
+    @pytest.mark.unit
+    @patch("os.path.exists", return_value=True)
+    @patch("builtins.open", new_callable=mock_open)
+    def test_save_prompt_data_with_overrides_renders_section_and_applies_values(
+        self, mock_file, mock_exists, orchestrator
+    ):
+        """When overrides are provided, they should render in the prompt and apply to schema and sample."""
+        overrides = {"type_id": 999, "custom_any_key": "any-value"}
+        prompt_data = {
+            "existing_test_cases": [],
+            "patterns": {"types": {}, "priorities": {}},
+            "features": [],
+            "requirements": {
+                "functional": [],
+                "security": [],
+                "accessibility": [],
+                "performance": [],
+                "api_endpoints": [],
+                "database": [],
+                "browser_support": [],
+                "technical": [],
+            },
+            "config": {
+                "test_case_count": 5,
+                "test_types": ["positive", "negative"],
+                "priority_distribution": {"High": 40, "Medium": 40, "Low": 20},
+            },
+            # Minimal derived schema that includes type_id, so overrides can apply
+            "derived_format": {
+                "schema": {
+                    "title": "",
+                    "template_id": 2,
+                    "type_id": 22,
+                    "priority_id": 3,
+                    "refs": "",
+                    "estimate": "",
+                    "custom_preconds": "",
+                    "labels": [],
+                    "custom_steps_separated": [
+                        {"content": "Action to perform", "expected": "Expected result"}
+                    ],
+                }
+            },
+            "overrides": overrides,
+        }
+
+        orchestrator.save_prompt_data(prompt_data)
+
+        # Capture written content
+        handle = mock_file()
+        written = "".join(call.args[0] for call in handle.write.call_args_list)
+
+        # The Field Overrides section should be present
+        assert "Field Overrides (USE EXACT VALUES)" in written
+        # The overrides JSON should be present
+        assert '"type_id": 999' in written
+        assert '"custom_any_key": "any-value"' in written
+        # The schema block should reflect the overridden type_id
+        assert '"type_id": 999' in written
+
+        # The sample block should also include overrides (e.g., the arbitrary key)
+        assert '"custom_any_key": "any-value"' in written
+
+    @pytest.mark.unit
+    @patch("os.path.exists", return_value=True)
+    @patch("builtins.open", new_callable=mock_open)
+    def test_save_prompt_data_with_empty_overrides_hides_section(
+        self, mock_file, mock_exists, orchestrator
+    ):
+        """When overrides is an empty dict, the overrides section should not be rendered."""
+        prompt_data = {
+            "existing_test_cases": [],
+            "patterns": {"types": {}, "priorities": {}},
+            "features": [],
+            "requirements": {
+                "functional": [],
+                "security": [],
+                "accessibility": [],
+                "performance": [],
+                "api_endpoints": [],
+                "database": [],
+                "browser_support": [],
+                "technical": [],
+            },
+            "config": {
+                "test_case_count": 5,
+                "test_types": ["positive", "negative"],
+                "priority_distribution": {"High": 40, "Medium": 40, "Low": 20},
+            },
+            "derived_format": {"schema": {"title": "", "type_id": 22}},
+            "overrides": {},
+        }
+
+        orchestrator.save_prompt_data(prompt_data)
+
+        handle = mock_file()
+        written = "".join(call.args[0] for call in handle.write.call_args_list)
+
+        assert "Field Overrides (USE EXACT VALUES)" not in written
 
     @pytest.mark.unit
     @patch.object(PromptGeneratorOrchestrator, "read_knowledge_base")

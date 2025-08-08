@@ -5,16 +5,17 @@ Uses the official TestRail API client.
 
 import json
 import os
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from .client import APIClient
 from configs.config import (
-    TESTRAIL_URL,
-    TESTRAIL_USERNAME,
-    TESTRAIL_PASSWORD,
     PROJECT_ID,
     SUITE_ID,
+    TESTRAIL_PASSWORD,
+    TESTRAIL_URL,
+    TESTRAIL_USERNAME,
 )
+
+from .client import APIClient
 
 
 class TestRailAPI:

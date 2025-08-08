@@ -11,6 +11,7 @@ from configs.output_test_case_config import (
     DEFAULT_PRIORITY_DISTRIBUTION,
     DEFAULT_TEST_CASES_COUNT,
     DEFAULT_TEST_TYPES,
+    OVERRIDE_FIELDS,
     WCAG_GUIDLINE,
 )
 
@@ -31,6 +32,7 @@ class TestOutputTestCaseConfig:
         assert isinstance(DEFAULT_TEST_CASES_COUNT, int)
         assert isinstance(DEFAULT_TEST_TYPES, list)
         assert isinstance(DEFAULT_PRIORITY_DISTRIBUTION, dict)
+        assert isinstance(OVERRIDE_FIELDS, dict)
 
     @pytest.mark.unit
     def test_test_types_content(self):
@@ -114,3 +116,19 @@ class TestOutputTestCaseConfig:
         """Test that priority distribution values are integers"""
         for value in DEFAULT_PRIORITY_DISTRIBUTION.values():
             assert isinstance(value, int)
+
+    @pytest.mark.unit
+    def test_override_fields_is_dict_allow_any_shape(self):
+        """OVERRIDE_FIELDS should be a dict and can be empty or any key-value shape."""
+        assert isinstance(OVERRIDE_FIELDS, dict)
+
+        # It can be empty
+        if OVERRIDE_FIELDS == {}:
+            assert True
+
+        # It can have any keys/values (no strict schema enforced)
+        # Spot-check: presence of arbitrary keys should not raise
+        for key, value in OVERRIDE_FIELDS.items():
+            assert key is not None
+            # Accept any type for value
+            assert True

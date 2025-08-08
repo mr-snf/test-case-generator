@@ -188,7 +188,7 @@ After you run `python generate_prompt.py`, a complete, ready-to-use prompt is wr
 
 OR
 
-- Simply write "Use the file @test_case_generator.md as your prompt and follow the instructions in it"
+- Simply write "Use the file `@test_case_generator.md` as your prompt and follow the instructions in it"
 
 - The prompt uses `@` file references (e.g., `@knowledgebase/existing_test_cases.json`, `@target/generated_test_cases.json`, `@feature/*.*`) so Cursor can load large files efficiently.
 - When the AI finishes generating the test cases, click "Keep All" to save the JSON array to `target/generated_test_cases.json`.

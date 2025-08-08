@@ -2,11 +2,11 @@
 Tests for the extract_test_cases.py functionality.
 """
 
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
-from unittest.mock import Mock, patch, mock_open
 
-
-from extract_test_cases import extract_test_cases, create_extraction_summary
+from extract_test_cases import create_extraction_summary, extract_test_cases
 
 
 class TestExtractTestCases:

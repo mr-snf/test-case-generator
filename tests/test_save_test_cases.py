@@ -2,11 +2,11 @@
 Tests for the save_test_cases.py functionality.
 """
 
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
-from unittest.mock import Mock, patch, mock_open
 
-
-from save_test_cases import TestCaseSaver, OutputFormatter
+from save_test_cases import OutputFormatter, TestCaseSaver
 
 
 class TestOutputFormatter:

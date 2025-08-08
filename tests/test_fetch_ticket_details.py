@@ -2,11 +2,12 @@
 Tests for fetch_ticket_details.py script
 """
 
-import os
 import json
-import pytest
-from unittest.mock import Mock, patch, mock_open
+import os
 from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 
 # Import the script's main class
 from fetch_ticket_details import TicketDetailsFetcher

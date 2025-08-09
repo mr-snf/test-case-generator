@@ -151,7 +151,58 @@ DEFAULT_PRIORITY_DISTRIBUTION = {
 
 # Similarity threshold for duplicate detection
 SIMILARITY_THRESHOLD = 0.85
+
+# Fields to force/override in generated test cases (typically custom fields)
+# Keys must match your TestRail field API names. Values are written as-is to
+# each generated test case during normalization, overriding inferred values.
+OVERRIDE_FIELDS = {
+    "type_id": 22,
+    "custom_automation_type": 6,
+    "custom_platforms": 2,
+    "custom_squad": 2,
+    "custom_levels": 2,
+    "custom_operatingsystem": "",
+    "custom_testtype": [1],
+}
 ```
+
+### OVERRIDE_FIELDS
+
+`OVERRIDE_FIELDS` lets you explicitly set or normalize specific TestRail fields on every generated test case. This is useful to enforce your team's defaults or meet template requirements regardless of what is inferred from existing patterns.
+
+- **When it's applied**: After the prompt is generated and test cases are produced, a normalization pass applies these overrides to each test case object before saving to `target/generated_test_cases.json` or uploading to TestRail.
+- **Why is it useful?**  
+  Using `OVERRIDE_FIELDS` ensures that every generated test case consistently matches your team's standards or project requirements, regardless of what the AI or existing patterns might suggest. This is especially helpful for enforcing required field values, meeting template constraints, or clearing out unwanted data. By explicitly setting or clearing fields, you avoid manual edits and reduce the risk of errors when importing cases into TestRail.
+
+Examples:
+
+```python
+# Enforce team defaults across all generated cases
+OVERRIDE_FIELDS = {
+    "type_id": 22,                  # Force case type
+    "priority_id": 2,               # Medium priority
+    "custom_automation_type": 6,    # Team-specific enum value
+    "custom_platforms": 2,          # Platform enum
+    "custom_squad": 2,              # Squad enum
+    "custom_levels": 2,             # Testing level enum
+    "custom_operatingsystem": "",  # Clear text field
+    "custom_testtype": [1],         # Multi-select (e.g., Functional)
+}
+
+# Clear or disable fields deliberately
+OVERRIDE_FIELDS = {
+    "refs": "",                    # Remove references
+    "custom_testtype": [],          # No test type tags
+}
+
+# Disable overrides entirely
+OVERRIDE_FIELDS = {}
+```
+
+Notes:
+- These overrides take precedence over values inferred from existing cases or the AI prompt output.
+- Only fields present in your TestRail project/template will be accepted by the API. Ensure IDs map to valid options in your instance.
+- For `custom_steps_separated`, prefer allowing the generator to build steps, but you can still normalize shape if needed (array of `{ content, expected }`).
 
 ### 4. Generate Prompt for Test Case Creation
 

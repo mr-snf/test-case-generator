@@ -18,8 +18,8 @@ DEFAULT_PRIORITY_DISTRIBUTION = {"High": 40, "Medium": 40, "Low": 20}
 # Similarity threshold for duplicate test cases
 SIMILARITY_THRESHOLD = 0.85
 
-# Fields to override in generated test cases
-# Format: {"field_name": "value"}
+# Fields to override in generated test cases (Mostly the custom fields)
+# Format: {"field_name": value}
 OVERRIDE_FIELDS = {
     "type_id": 22,
     "custom_automation_type": 6,

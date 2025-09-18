@@ -359,27 +359,6 @@ The system includes comprehensive Jira integration for ticket management:
 - **Attachment Management**: Downloads and organizes ticket attachments
 - **Metadata Extraction**: Captures ticket metadata (author, creation date, etc.)
 
-### Usage Examples
-
-```python
-from src.jira import JiraAPI
-
-# Initialize Jira client
-jira_client = JiraAPI(
-    base_url="https://your-domain.atlassian.net",
-    username="your-email@domain.com",
-    api_token="your-api-token"
-)
-
-# Fetch ticket details
-ticket_details = jira_client.get_issue("PROJ-123")
-description = jira_client.get_issue_description("PROJ-123")
-
-# Test connection
-if jira_client.test_connection():
-    print("Successfully connected to Jira")
-```
-
 ## 🧪 Testing
 
 Run the comprehensive test suite:
@@ -398,14 +377,6 @@ python -m pytest tests/test_fetch_ticket_details.py -v
 # Run with coverage
 python -m pytest tests/ --cov=. --cov-report=html
 ```
-
-The test suite includes:
-- **218 tests** covering all functionality
-- **Unit tests** for individual components
-- **Integration tests** for workflow validation
-- **Error handling** and edge case coverage
-- **TestRail API tests** with pagination support
-- **Jira API tests** for ticket details and attachments
 
 ## 🔧 Troubleshooting
 
@@ -445,20 +416,6 @@ Enable debug output by setting the `DEBUG` environment variable:
 export DEBUG=1
 python generate_prompt.py
 ```
-
-## 📈 Quality Assurance
-
-The system includes comprehensive quality checks:
-
-- ✅ **Format Validation**: Ensures TestRail compatibility
-- ✅ **Coverage Analysis**: Validates requirement coverage
-- ✅ **Pattern Consistency**: Maintains established test case patterns
-- ✅ **Duplicate Prevention**: Identifies and filters similar test cases
-- ✅ **Reference Tracking**: Extracts and uses reference IDs
-- ✅ **Configuration Validation**: Ensures proper settings
-- ✅ **API Integration**: Robust TestRail and Jira API integration with error handling
-- ✅ **Pagination Support**: Handles large datasets with automatic pagination
-- ✅ **Attachment Management**: Secure download and management of ticket attachments
 
 ## 🤝 Contributing
 

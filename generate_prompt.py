@@ -218,6 +218,9 @@ class PromptGeneratorOrchestrator:
                 return data[:max_samples]
             print("⚠️  Unexpected generated test cases format (expected list)")
             return []
+        except json.JSONDecodeError as e:
+            print(f"❌ Error reading generated test cases (invalid JSON): {str(e)}")
+            return []
         except OSError as e:
             print(f"❌ Error reading generated test cases: {str(e)}")
             return []

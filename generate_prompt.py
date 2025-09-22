@@ -1,11 +1,10 @@
 """
-Prompt Generation Orchestrator for Cursor AI
-This script analyzes the project structure and generates comprehensive prompt data
-for Cursor AI to create test cases based on existing patterns and requirements.
+This script analyzes the project structure and generates comprehensive prompt data.
 """
 
 import json
 import os
+import traceback
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Union
@@ -387,7 +386,7 @@ class PromptGeneratorOrchestrator:
                     ordered_schema[key] = {}
                 else:
                     ordered_schema[key] = ""
-        for key in candidate_keys.keys():
+        for key in candidate_keys:
             if key not in ordered_schema:
                 inferred = field_types.get(key, "string")
                 if inferred in ("integer", "number"):
@@ -786,7 +785,8 @@ Study this example to understand the exact format and style:
                     _expected = ""
                 sample_step_content = (
                     _content.strip()
-                    or "From the search results, click + icon for a fontfamily to add it to projects"
+                    or "From the search results, "
+                    "click + icon for a fontfamily to add it to projects"
                 )
                 sample_step_expected = (
                     _expected.strip() or "Expected outcome is displayed"
@@ -845,7 +845,10 @@ Study this example to understand the exact format and style:
                 sample_preconds = (
                     "The logged in user is a sales admin or a system admin"
                 )
-                sample_step_content = "From the search results, click + icon for a fontfamily to add it to projects"
+                sample_step_content = (
+                    "From the search results,"
+                    " click + icon for a fontfamily to add it to projects"
+                )
                 sample_step_expected = ""
                 sample_title = "Verify that the fontfamily is added to projects"
 
@@ -1019,7 +1022,6 @@ After generating the test cases, you MUST check for potential duplicates:
 
         except (OSError, TypeError, ValueError) as e:
             print(f"❌ Error saving prompt data: {str(e)}")
-            import traceback
 
             traceback.print_exc()
 
@@ -1057,7 +1059,8 @@ After generating the test cases, you MUST check for potential duplicates:
         print(f"📖 Knowledge Base: {len(existing_test_cases)} existing test cases")
         print(f"📋 Features: {len(features)} feature files")
         print(
-            f"⚙️  Configuration: {config['test_case_count']} test cases, {len(config['test_types'])} types"
+            f"⚙️  Configuration: {config['test_case_count']} test cases, "
+            f"{len(config['test_types'])} types"
         )
 
         # Create prompt data dictionary

@@ -28,6 +28,10 @@ class APIClient:
             base_url += "/"
         self.__url = base_url + "index.php?/api/v2/"
 
+        # Create a session for connection reuse
+        self.session = requests.Session()
+        self.session.timeout = 30
+
     def send_get(self, uri, filepath=None):
         """Issue a GET request (read) against the API.
 
@@ -67,15 +71,15 @@ class APIClient:
         if method == "POST":
             if uri[:14] == "add_attachment":  # add_attachment API method
                 files = {"attachment": (open(data, "rb"))}
-                response = requests.post(url, headers=headers, files=files, timeout=30)
+                response = self.session.post(url, headers=headers, files=files)
                 files["attachment"].close()
             else:
                 headers["Content-Type"] = "application/json"
                 payload = bytes(json.dumps(data), "utf-8")
-                response = requests.post(url, headers=headers, data=payload, timeout=30)
+                response = self.session.post(url, headers=headers, data=payload)
         else:
             headers["Content-Type"] = "application/json"
-            response = requests.get(url, headers=headers, timeout=30)
+            response = self.session.get(url, headers=headers)
 
         if response.status_code > 201:
             try:
@@ -98,6 +102,21 @@ class APIClient:
                 except ValueError:  # Nothing to return
                     return {}
 
+    def close(self):
+        """Close the session to free up resources."""
+        if hasattr(self, "session"):
+            self.session.close()
+
+    def __enter__(self):
+        """Support for context manager usage."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up session when exiting context manager."""
+        self.close()
+
 
 class APIError(Exception):
     """Exception raised for API errors."""
+
+    pass

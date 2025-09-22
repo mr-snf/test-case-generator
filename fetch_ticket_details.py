@@ -32,7 +32,7 @@ class TicketDetailsFetcher:
             sys.exit(1)
         except Exception as e:
             print(f"❌ Failed to initialize Jira client: {e}")
-            raise
+            sys.exit(1)
 
     def test_connection(self) -> bool:
         """Test the connection to Jira"""
@@ -44,9 +44,9 @@ class TicketDetailsFetcher:
             else:
                 print("❌ Failed to connect to Jira")
                 return False
-        except Exception as e:
-            print(f"❌ Connection test failed: {e}")
-            raise
+        except Exception:
+            print("❌ Connection test failed!!")
+            sys.exit(1)
 
     def get_ticket_details(self, ticket_id: str) -> Dict:
         """

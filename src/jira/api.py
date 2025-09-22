@@ -13,8 +13,6 @@ from requests.exceptions import RequestException
 class JiraAPI:
     """Jira API client for fetching ticket details"""
 
-    __test__ = False  # Prevent pytest from collecting this as a test
-
     def __init__(self, base_url: str, username: str, api_token: str):
         """
         Initialize Jira API client
@@ -58,7 +56,7 @@ class JiraAPI:
         """
         try:
             url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
-            response = requests.get(
+            response = self.session.get(
                 url, auth=self.auth, headers=self.headers, timeout=10
             )
 
@@ -91,7 +89,7 @@ class JiraAPI:
             url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
             params = {"fields": "description"}
 
-            response = requests.get(
+            response = self.session.get(
                 url, auth=self.auth, headers=self.headers, params=params, timeout=10
             )
 
@@ -156,7 +154,7 @@ class JiraAPI:
         try:
             # Try to fetch server info
             url = f"{self.base_url}/rest/api/3/serverInfo"
-            response = requests.get(
+            response = self.session.get(
                 url, auth=self.auth, headers=self.headers, timeout=10
             )
 

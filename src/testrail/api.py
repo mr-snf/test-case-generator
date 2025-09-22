@@ -21,8 +21,6 @@ from .client import APIClient
 class TestRailAPI:
     """TestRail API client for managing test cases"""
 
-    __test__ = False  # Prevent pytest from collecting this as a test
-
     def __init__(self):
         # Load configuration from environment variables
         self.base_url = TESTRAIL_URL
@@ -35,6 +33,19 @@ class TestRailAPI:
         self.client = APIClient(self.base_url)
         self.client.user = self.username
         self.client.password = self.password
+
+    def close(self):
+        """Close the API client session to free up resources."""
+        if hasattr(self.client, "close"):
+            self.client.close()
+
+    def __enter__(self):
+        """Support for context manager usage."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up client when exiting context manager."""
+        self.close()
 
     def get_projects(self) -> List[Dict]:
         """Get all projects"""

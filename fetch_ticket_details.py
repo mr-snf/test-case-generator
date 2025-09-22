@@ -30,7 +30,7 @@ class TicketDetailsFetcher:
             print("  - JIRA_USERNAME")
             print("  - JIRA_API_TOKEN")
             sys.exit(1)
-        except Exception as e:
+        except (ConnectionError, ImportError) as e:
             print(f"❌ Failed to initialize Jira client: {e}")
             sys.exit(1)
 
@@ -44,7 +44,7 @@ class TicketDetailsFetcher:
             else:
                 print("❌ Failed to connect to Jira")
                 return False
-        except Exception as e:
+        except (ConnectionError, ImportError, ValueError) as e:
             print(f"❌ Connection test failed: {e}")
             return False
 
@@ -82,7 +82,7 @@ class TicketDetailsFetcher:
 
         except Exception as e:
             print(f"❌ Error fetching ticket details: {e}")
-            return {}
+            return {"error": str(e)}
 
     def _get_attachments(self, attachments: List[Dict]) -> List[Dict]:
         """
@@ -138,7 +138,7 @@ class TicketDetailsFetcher:
             print(f"✅ Ticket details saved to: {output_file}")
             return output_file
 
-        except Exception as e:
+        except OSError as e:
             print(f"❌ Error saving to file: {e}")
             return ""
 
@@ -171,7 +171,8 @@ class TicketDetailsFetcher:
             print(f"\n📎 Attachments ({len(attachments)}):")
             for i, attachment in enumerate(attachments, 1):
                 print(
-                    f"  {i}. {attachment.get('filename', 'Unknown')} ({attachment.get('size', 0)} bytes)"
+                    f"  {i}. {attachment.get('filename', 'Unknown')} "
+                    f"({attachment.get('size', 0)} bytes)"
                 )
 
     def download_attachments(
@@ -208,9 +209,7 @@ class TicketDetailsFetcher:
 
             try:
                 # Download the file
-                response = self.jira_client._session.get(
-                    url, auth=self.jira_client.auth
-                )
+                response = self.jira_client.session.get(url, auth=self.jira_client.auth)
                 if response.status_code == 200:
                     file_path = os.path.join(download_dir, filename)
                     with open(file_path, "wb") as f:
@@ -222,7 +221,7 @@ class TicketDetailsFetcher:
                         f"  ❌ Failed to download {filename}: HTTP {response.status_code}"
                     )
 
-            except Exception as e:
+            except OSError as e:
                 print(f"  ❌ Error downloading {filename}: {e}")
 
         print(f"📥 Downloaded {len(downloaded_files)} files successfully")
@@ -249,7 +248,7 @@ def main():
     fetcher.print_summary(ticket_details)
 
     # Save to JSON (if requested)
-    output_dir = f"feature"
+    output_dir = "feature"
     fetcher.save_to_json(
         ticket_details, f"{output_dir}/ticket_details_{JIRA_TICKET_ID}.json"
     )

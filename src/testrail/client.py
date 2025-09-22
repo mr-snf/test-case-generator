@@ -19,12 +19,18 @@ import requests
 
 
 class APIClient:
+    """TestRail API client."""
+
     def __init__(self, base_url):
         self.user = ""
         self.password = ""
         if not base_url.endswith("/"):
             base_url += "/"
         self.__url = base_url + "index.php?/api/v2/"
+
+        # Create a session for connection reuse
+        self.session = requests.Session()
+        self.timeout = 30
 
     def send_get(self, uri, filepath=None):
         """Issue a GET request (read) against the API.
@@ -57,45 +63,65 @@ class APIClient:
         url = self.__url + uri
 
         auth = str(
-            base64.b64encode(bytes("%s:%s" % (self.user, self.password), "utf-8")),
+            base64.b64encode(bytes(f"{self.user}:{self.password}", "utf-8")),
             "ascii",
         ).strip()
         headers = {"Authorization": "Basic " + auth}
 
         if method == "POST":
-            if uri[:14] == "add_attachment":  # add_attachment API method
+            if uri.startswith("add_attachment"):  # add_attachment API method
                 files = {"attachment": (open(data, "rb"))}
-                response = requests.post(url, headers=headers, files=files)
+                response = self.session.post(
+                    url, headers=headers, files=files, timeout=self.timeout
+                )
                 files["attachment"].close()
             else:
                 headers["Content-Type"] = "application/json"
                 payload = bytes(json.dumps(data), "utf-8")
-                response = requests.post(url, headers=headers, data=payload)
+                response = self.session.post(
+                    url, headers=headers, data=payload, timeout=self.timeout
+                )
         else:
             headers["Content-Type"] = "application/json"
-            response = requests.get(url, headers=headers)
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
 
         if response.status_code > 201:
             try:
                 error = response.json()
-            except:  # response.content not formatted as JSON
+            except ValueError:  # response.content not formatted as JSON
                 error = str(response.content)
             raise APIError(
-                "TestRail API returned HTTP %s (%s)" % (response.status_code, error)
+                f"TestRail API returned HTTP {response.status_code} ({error})"
             )
         else:
             if uri[:15] == "get_attachment/":  # Expecting file, not JSON
                 try:
-                    open(data, "wb").write(response.content)
+                    with open(data, "wb") as f:
+                        f.write(response.content)
                     return data
-                except:
+                except OSError:
                     return "Error saving attachment."
             else:
                 try:
                     return response.json()
-                except:  # Nothing to return
+                except ValueError:  # Nothing to return
                     return {}
+
+    def close(self):
+        """Close the session to free up resources."""
+        if hasattr(self, "session"):
+            self.session.close()
+
+    def __enter__(self):
+        """Support for context manager usage."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up session when exiting context manager."""
+        self.close()
 
 
 class APIError(Exception):
+    """Exception raised for API errors."""
+
     pass

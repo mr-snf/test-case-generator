@@ -19,3 +19,6 @@ addopts = [
     "--disable-warnings",
     "-W", "ignore::pytest.PytestUnknownMarkWarning"
 ] 
+
+[tool.isort]
+profile = "black"

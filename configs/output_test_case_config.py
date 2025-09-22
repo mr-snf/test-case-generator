@@ -1,3 +1,6 @@
+"""
+Configuration settings for test case generation."""
+
 # Test Case Generation Settings
 # =======================================================
 

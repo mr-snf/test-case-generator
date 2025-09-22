@@ -30,7 +30,7 @@ class TicketDetailsFetcher:
             print("  - JIRA_USERNAME")
             print("  - JIRA_API_TOKEN")
             sys.exit(1)
-        except Exception as e:
+        except (ConnectionError, ImportError) as e:
             print(f"❌ Failed to initialize Jira client: {e}")
             sys.exit(1)
 
@@ -44,9 +44,9 @@ class TicketDetailsFetcher:
             else:
                 print("❌ Failed to connect to Jira")
                 return False
-        except Exception:
-            print("❌ Connection test failed!!")
-            sys.exit(1)
+        except (ConnectionError, ImportError, ValueError) as e:
+            print(f"❌ Connection test failed: {e}")
+            return False
 
     def get_ticket_details(self, ticket_id: str) -> Dict:
         """
@@ -82,7 +82,7 @@ class TicketDetailsFetcher:
 
         except Exception as e:
             print(f"❌ Error fetching ticket details: {e}")
-            raise
+            return {"error": str(e)}
 
     def _get_attachments(self, attachments: List[Dict]) -> List[Dict]:
         """
@@ -171,7 +171,8 @@ class TicketDetailsFetcher:
             print(f"\n📎 Attachments ({len(attachments)}):")
             for i, attachment in enumerate(attachments, 1):
                 print(
-                    f"  {i}. {attachment.get('filename', 'Unknown')} ({attachment.get('size', 0)} bytes)"
+                    f"  {i}. {attachment.get('filename', 'Unknown')} "
+                    f"({attachment.get('size', 0)} bytes)"
                 )
 
     def download_attachments(

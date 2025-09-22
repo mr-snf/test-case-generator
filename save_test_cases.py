@@ -146,7 +146,8 @@ class TestCaseSaver:
                     self.project_id, self.suite_id
                 )
                 if not sections:
-                    raise RuntimeError("No sections found in TestRail project")
+                    print("Error: No sections found in TestRail project")
+                    return []
                 section_id = sections[0]["id"]
 
         saved_cases = []
@@ -202,8 +203,7 @@ def main():
     """Main entry point"""
     try:
         saver = TestCaseSaver()
-        saver.save_all_from_target()
-    except (OSError, ValueError, json.JSONDecodeError) as e:
+    except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as e:
         print(f"Error: {str(e)}")
         sys.exit(1)
 

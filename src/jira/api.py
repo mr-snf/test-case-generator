@@ -161,7 +161,8 @@ class JiraAPI:
             if response.status_code == 200:
                 server_info = response.json()
                 print(
-                    f"Successfully connected to Jira. Server: {server_info.get('serverTitle', 'Unknown')}"
+                    f"Successfully connected to Jira. Server: "
+                    f"{server_info.get('serverTitle', 'Unknown')}"
                 )
                 return True
             else:

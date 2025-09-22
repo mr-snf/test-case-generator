@@ -30,7 +30,7 @@ class APIClient:
 
         # Create a session for connection reuse
         self.session = requests.Session()
-        self.session.timeout = 30
+        self.timeout = 30
 
     def send_get(self, uri, filepath=None):
         """Issue a GET request (read) against the API.
@@ -69,17 +69,21 @@ class APIClient:
         headers = {"Authorization": "Basic " + auth}
 
         if method == "POST":
-            if uri[:14] == "add_attachment":  # add_attachment API method
+            if uri.startswith("add_attachment"):  # add_attachment API method
                 files = {"attachment": (open(data, "rb"))}
-                response = self.session.post(url, headers=headers, files=files)
+                response = self.session.post(
+                    url, headers=headers, files=files, timeout=self.timeout
+                )
                 files["attachment"].close()
             else:
                 headers["Content-Type"] = "application/json"
                 payload = bytes(json.dumps(data), "utf-8")
-                response = self.session.post(url, headers=headers, data=payload)
+                response = self.session.post(
+                    url, headers=headers, data=payload, timeout=self.timeout
+                )
         else:
             headers["Content-Type"] = "application/json"
-            response = self.session.get(url, headers=headers)
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
 
         if response.status_code > 201:
             try:
@@ -92,7 +96,8 @@ class APIClient:
         else:
             if uri[:15] == "get_attachment/":  # Expecting file, not JSON
                 try:
-                    open(data, "wb").write(response.content)
+                    with open(data, "wb") as f:
+                        f.write(response.content)
                     return data
                 except OSError:
                     return "Error saving attachment."

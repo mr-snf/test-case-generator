@@ -15,7 +15,7 @@ from configs.config import (
     TESTRAIL_USERNAME,
 )
 
-from .client import APIClient
+from .client import APIClient, APIError
 
 
 class TestRailAPI:
@@ -51,8 +51,8 @@ class TestRailAPI:
         """Get all projects"""
         try:
             return self.client.send_get("get_projects")
-        except (ConnectionError, TimeoutError) as e:
-            print(f"Network error getting projects: {str(e)}")
+        except (APIError, ConnectionError, TimeoutError) as e:
+            print(f"Network/API error getting projects: {str(e)}")
             return []
         except ValueError as e:
             print(f"Value error getting projects: {str(e)}")
@@ -68,8 +68,8 @@ class TestRailAPI:
         """Get all test suites for a project"""
         try:
             return self.client.send_get(f"get_suites/{project_id}")
-        except ValueError as e:
-            print(f"Value error getting suites: {str(e)}")
+        except (APIError, ValueError) as e:
+            print(f"API/Value error getting suites: {str(e)}")
             return []
         except ConnectionError as e:
             print(f"Connection error getting suites: {str(e)}")
@@ -93,7 +93,14 @@ class TestRailAPI:
             if suite_id:
                 endpoint += f"&suite_id={suite_id}"
             return self.client.send_get(endpoint)
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting sections: {str(e)}")
             return []
 
@@ -168,7 +175,14 @@ class TestRailAPI:
                     break
 
             return all_cases
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting cases: {str(e)}")
             return []
 
@@ -176,7 +190,14 @@ class TestRailAPI:
         """Get a specific test case by ID"""
         try:
             return self.client.send_get(f"get_case/{case_id}")
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting case {case_id}: {str(e)}")
             return {}
 
@@ -184,7 +205,14 @@ class TestRailAPI:
         """Add a new test case to a section"""
         try:
             return self.client.send_post(f"add_case/{section_id}", case_data)
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error adding case: {str(e)}")
             return {}
 
@@ -192,7 +220,14 @@ class TestRailAPI:
         """Update an existing test case"""
         try:
             return self.client.send_post(f"update_case/{case_id}", case_data)
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error updating case {case_id}: {str(e)}")
             return {}
 
@@ -200,7 +235,14 @@ class TestRailAPI:
         """Delete a test case"""
         try:
             return self.client.send_post(f"delete_case/{case_id}", {})
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error deleting case {case_id}: {str(e)}")
             return {}
 
@@ -208,7 +250,14 @@ class TestRailAPI:
         """Add a new section to a project"""
         try:
             return self.client.send_post(f"add_section/{project_id}", section_data)
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error adding section: {str(e)}")
             return {}
 
@@ -216,7 +265,14 @@ class TestRailAPI:
         """Update an existing section"""
         try:
             return self.client.send_post(f"update_section/{section_id}", section_data)
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error updating section {section_id}: {str(e)}")
             return {}
 
@@ -224,7 +280,14 @@ class TestRailAPI:
         """Delete a section"""
         try:
             return self.client.send_post(f"delete_section/{section_id}", {})
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error deleting section {section_id}: {str(e)}")
             return {}
 
@@ -232,7 +295,14 @@ class TestRailAPI:
         """Get all available custom fields for test cases"""
         try:
             return self.client.send_get("get_case_fields")
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting case fields: {str(e)}")
             return []
 
@@ -240,7 +310,14 @@ class TestRailAPI:
         """Get all available priorities"""
         try:
             return self.client.send_get("get_priorities")
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting priorities: {str(e)}")
             return []
 
@@ -248,7 +325,14 @@ class TestRailAPI:
         """Get all available case types"""
         try:
             return self.client.send_get("get_case_types")
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Error getting case types: {str(e)}")
             return []
 
@@ -320,7 +404,7 @@ class TestRailAPI:
             print(f"Exported {len(test_cases)} test cases to {output_file}")
             return test_cases
 
-        except (OSError, IOError, ValueError, TypeError) as e:
+        except (APIError, OSError, IOError, ValueError, TypeError) as e:
             print(f"Error exporting test cases: {str(e)}")
             return []
 
@@ -336,6 +420,13 @@ class TestRailAPI:
             else:
                 print("Connected to TestRail but no projects found.")
                 return False
-        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
+        except (
+            APIError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+            OSError,
+            RuntimeError,
+        ) as e:
             print(f"Failed to connect to TestRail: {str(e)}")
             return False

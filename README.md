@@ -8,7 +8,6 @@ This project has been enhanced with:
 - ✅ **TestRail API Optimization**: Improved pagination support for handling large datasets (250+ test cases)
 - ✅ **Code Reorganization**: Restructured into modular packages (`src/testrail/` and `src/jira/`)
 - ✅ **Jira Integration**: Added comprehensive Jira API integration for ticket details and attachments
-- ✅ **Enhanced Testing**: Expanded test suite to 218 tests with 97% code coverage
 - ✅ **Simplified Scripts**: Streamlined `fetch_ticket_details.py` for focused functionality
 
 ## 🚀 Features
@@ -43,7 +42,6 @@ Test-case-generator/
 │       ├── __init__.py
 │       └── api.py                  # Jira API client
 ├── target/                         # Generated test case outputs
-├── tests/                          # Comprehensive test suite
 ├── extract_test_cases.py           # TestRail extraction script
 ├── fetch_ticket_details.py         # Jira ticket details fetcher
 ├── generate_prompt.py              # Prompt generation orchestrator
@@ -359,25 +357,6 @@ The system includes comprehensive Jira integration for ticket management:
 - **Attachment Management**: Downloads and organizes ticket attachments
 - **Metadata Extraction**: Captures ticket metadata (author, creation date, etc.)
 
-## 🧪 Testing
-
-Run the comprehensive test suite:
-
-```bash
-# Run all tests
-python -m pytest tests/ -v
-
-# Run specific test categories
-python -m pytest tests/test_extract_test_cases.py -v
-python -m pytest tests/test_generate_prompt_integration.py -v
-python -m pytest tests/test_test_case_generator.py -v
-python -m pytest tests/test_jira.py -v
-python -m pytest tests/test_fetch_ticket_details.py -v
-
-# Run with coverage
-python -m pytest tests/ --cov=. --cov-report=html
-```
-
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -422,9 +401,7 @@ python generate_prompt.py
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+4. Submit a pull request
 
 ## 📄 License
 

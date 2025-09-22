@@ -7,6 +7,7 @@ from typing import Dict
 
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import RequestException
 
 
 class JiraAPI:
@@ -41,9 +42,9 @@ class JiraAPI:
         }
 
         # Create a session for reuse
-        self._session = requests.Session()
-        self._session.auth = self.auth
-        self._session.headers.update(self.headers)
+        self.session = requests.Session()
+        self.session.auth = self.auth
+        self.session.headers.update(self.headers)
 
     def get_issue(self, issue_key: str) -> Dict:
         """
@@ -57,7 +58,9 @@ class JiraAPI:
         """
         try:
             url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
-            response = requests.get(url, auth=self.auth, headers=self.headers)
+            response = requests.get(
+                url, auth=self.auth, headers=self.headers, timeout=10
+            )
 
             if response.status_code == 200:
                 return response.json()
@@ -70,7 +73,7 @@ class JiraAPI:
                 )
                 return {}
 
-        except Exception as e:
+        except RequestException as e:
             print(f"Error fetching issue {issue_key}: {str(e)}")
             return {}
 
@@ -89,7 +92,7 @@ class JiraAPI:
             params = {"fields": "description"}
 
             response = requests.get(
-                url, auth=self.auth, headers=self.headers, params=params
+                url, auth=self.auth, headers=self.headers, params=params, timeout=10
             )
 
             if response.status_code == 200:
@@ -106,7 +109,7 @@ class JiraAPI:
                 )
                 return ""
 
-        except Exception as e:
+        except RequestException as e:
             print(f"Error fetching description for {issue_key}: {str(e)}")
             return ""
 
@@ -153,7 +156,9 @@ class JiraAPI:
         try:
             # Try to fetch server info
             url = f"{self.base_url}/rest/api/3/serverInfo"
-            response = requests.get(url, auth=self.auth, headers=self.headers)
+            response = requests.get(
+                url, auth=self.auth, headers=self.headers, timeout=10
+            )
 
             if response.status_code == 200:
                 server_info = response.json()
@@ -167,6 +172,6 @@ class JiraAPI:
                 )
                 return False
 
-        except Exception as e:
+        except RequestException as e:
             print(f"Failed to connect to Jira: {str(e)}")
             return False

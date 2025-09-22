@@ -40,16 +40,37 @@ class TestRailAPI:
         """Get all projects"""
         try:
             return self.client.send_get("get_projects")
-        except Exception as e:
-            print(f"Error getting projects: {str(e)}")
+        except (ConnectionError, TimeoutError) as e:
+            print(f"Network error getting projects: {str(e)}")
+            return []
+        except ValueError as e:
+            print(f"Value error getting projects: {str(e)}")
+            return []
+        except OSError as e:
+            print(f"OS error getting projects: {str(e)}")
+            return []
+        except RuntimeError as e:
+            print(f"Runtime error getting projects: {str(e)}")
             return []
 
     def get_suites(self, project_id: int) -> List[Dict]:
         """Get all test suites for a project"""
         try:
             return self.client.send_get(f"get_suites/{project_id}")
-        except Exception as e:
-            print(f"Error getting suites: {str(e)}")
+        except ValueError as e:
+            print(f"Value error getting suites: {str(e)}")
+            return []
+        except ConnectionError as e:
+            print(f"Connection error getting suites: {str(e)}")
+            return []
+        except TimeoutError as e:
+            print(f"Timeout error getting suites: {str(e)}")
+            return []
+        except OSError as e:
+            print(f"OS error getting suites: {str(e)}")
+            return []
+        except RuntimeError as e:
+            print(f"Runtime error getting suites: {str(e)}")
             return []
 
     def get_sections(
@@ -61,7 +82,7 @@ class TestRailAPI:
             if suite_id:
                 endpoint += f"&suite_id={suite_id}"
             return self.client.send_get(endpoint)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting sections: {str(e)}")
             return []
 
@@ -136,7 +157,7 @@ class TestRailAPI:
                     break
 
             return all_cases
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting cases: {str(e)}")
             return []
 
@@ -144,7 +165,7 @@ class TestRailAPI:
         """Get a specific test case by ID"""
         try:
             return self.client.send_get(f"get_case/{case_id}")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting case {case_id}: {str(e)}")
             return {}
 
@@ -152,7 +173,7 @@ class TestRailAPI:
         """Add a new test case to a section"""
         try:
             return self.client.send_post(f"add_case/{section_id}", case_data)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error adding case: {str(e)}")
             return {}
 
@@ -160,7 +181,7 @@ class TestRailAPI:
         """Update an existing test case"""
         try:
             return self.client.send_post(f"update_case/{case_id}", case_data)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error updating case {case_id}: {str(e)}")
             return {}
 
@@ -168,7 +189,7 @@ class TestRailAPI:
         """Delete a test case"""
         try:
             return self.client.send_post(f"delete_case/{case_id}", {})
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error deleting case {case_id}: {str(e)}")
             return {}
 
@@ -176,7 +197,7 @@ class TestRailAPI:
         """Add a new section to a project"""
         try:
             return self.client.send_post(f"add_section/{project_id}", section_data)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error adding section: {str(e)}")
             return {}
 
@@ -184,7 +205,7 @@ class TestRailAPI:
         """Update an existing section"""
         try:
             return self.client.send_post(f"update_section/{section_id}", section_data)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error updating section {section_id}: {str(e)}")
             return {}
 
@@ -192,7 +213,7 @@ class TestRailAPI:
         """Delete a section"""
         try:
             return self.client.send_post(f"delete_section/{section_id}", {})
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error deleting section {section_id}: {str(e)}")
             return {}
 
@@ -200,7 +221,7 @@ class TestRailAPI:
         """Get all available custom fields for test cases"""
         try:
             return self.client.send_get("get_case_fields")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting case fields: {str(e)}")
             return []
 
@@ -208,7 +229,7 @@ class TestRailAPI:
         """Get all available priorities"""
         try:
             return self.client.send_get("get_priorities")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting priorities: {str(e)}")
             return []
 
@@ -216,7 +237,7 @@ class TestRailAPI:
         """Get all available case types"""
         try:
             return self.client.send_get("get_case_types")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Error getting case types: {str(e)}")
             return []
 
@@ -262,10 +283,12 @@ class TestRailAPI:
             # Handle different response formats
             if isinstance(response, dict):
                 # If it's a dictionary, check if it contains cases in a specific key
-                if "cases" in response:
-                    test_cases = response["cases"]
-                elif "data" in response:
-                    test_cases = response["data"]
+                cases_value = response.get("cases")
+                data_value = response.get("data")
+                if isinstance(cases_value, list):
+                    test_cases = cases_value
+                elif isinstance(data_value, list):
+                    test_cases = data_value
                 else:
                     # If it's a dict but no obvious key, treat it as a single test case
                     test_cases = [response]
@@ -286,7 +309,7 @@ class TestRailAPI:
             print(f"Exported {len(test_cases)} test cases to {output_file}")
             return test_cases
 
-        except Exception as e:
+        except (OSError, IOError, ValueError, TypeError) as e:
             print(f"Error exporting test cases: {str(e)}")
             return []
 
@@ -302,6 +325,6 @@ class TestRailAPI:
             else:
                 print("Connected to TestRail but no projects found.")
                 return False
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, OSError, RuntimeError) as e:
             print(f"Failed to connect to TestRail: {str(e)}")
             return False

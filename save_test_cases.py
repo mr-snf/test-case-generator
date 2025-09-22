@@ -121,7 +121,7 @@ class TestCaseSaver:
                     print(f"Unexpected JSON structure in {json_file}")
                     return []
 
-        except Exception as e:
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
             print(f"Error loading test cases from {json_file}: {str(e)}")
             return []
 
@@ -146,7 +146,7 @@ class TestCaseSaver:
                     self.project_id, self.suite_id
                 )
                 if not sections:
-                    raise Exception("No sections found in TestRail project")
+                    raise RuntimeError("No sections found in TestRail project")
                 section_id = sections[0]["id"]
 
         saved_cases = []
@@ -155,7 +155,7 @@ class TestCaseSaver:
                 result = self.testrail_api.add_case(section_id, case_data)
                 saved_cases.append(result)
                 print(f"Saved test case: {result.get('title', 'Untitled')}")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, ValueError) as e:
                 print(f"Error saving test case: {str(e)}")
 
         print(f"Successfully saved {len(saved_cases)} test cases to TestRail")
@@ -193,7 +193,7 @@ class TestCaseSaver:
         print("\nSaving test cases to TestRail...")
         saved_cases = self.save_to_testrail(all_test_cases)
 
-        print(f"\n=== Summary ===")
+        print("\n=== Summary ===")
         print(f"Total test cases processed: {len(all_test_cases)}")
         print(f"Successfully saved to TestRail: {len(saved_cases)}")
 
@@ -203,7 +203,7 @@ def main():
     try:
         saver = TestCaseSaver()
         saver.save_all_from_target()
-    except Exception as e:
+    except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: {str(e)}")
         sys.exit(1)
 

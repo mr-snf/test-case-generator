@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-"""TestRail API configuration"""
+# TestRail API configuration
 
 # TestRail API settings
 TESTRAIL_URL = os.getenv("TESTRAIL_URL", "https://you-forgot-to-set-this.testrail.io")
@@ -22,15 +22,15 @@ TESTRAIL_PASSWORD = os.getenv(
 )
 
 # Project settings
-PROJECT_ID = int(os.getenv("TESTRAIL_PROJECT_ID", 1))
-SUITE_ID = int(os.getenv("TESTRAIL_SUITE_ID", 1))
-TARGET_SECTION_ID = int(os.getenv("TARGET_SECTION_ID", 1))
+PROJECT_ID = int(os.getenv("TESTRAIL_PROJECT_ID", "1"))
+SUITE_ID = int(os.getenv("TESTRAIL_SUITE_ID", "1"))
+TARGET_SECTION_ID = int(os.getenv("TARGET_SECTION_ID", "1"))
 
-# API endpoints
+# API endpoint
 API_BASE_URL = f"{TESTRAIL_URL}/api/v2"
 
 
-"""Jira API configuration"""
+# Jira API configuration
 
 # Jira API settings
 JIRA_URL = os.getenv("JIRA_URL", "https://you-forgot-to-set-this.atlassian.net")

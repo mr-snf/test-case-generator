@@ -21,7 +21,7 @@ from configs.output_test_case_config import (
 # Optional organization-specific overrides
 try:  # pragma: no cover - tolerate absence in some environments
     from configs.output_test_case_config import OVERRIDE_FIELDS  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     OVERRIDE_FIELDS = {}
 
 
@@ -70,8 +70,11 @@ class PromptGeneratorOrchestrator:
             print(f"✅ Loaded {len(test_cases)} existing test cases")
             return test_cases
 
-        except Exception as e:
-            print(f"❌ Error reading knowledge base: {str(e)}")
+        except json.JSONDecodeError as e:
+            print(f"❌ Error reading knowledge base (invalid JSON): {str(e)}")
+            return []
+        except OSError as e:
+            print(f"❌ Error reading knowledge base (file error): {str(e)}")
             return []
 
     def analyze_test_case_patterns(self, test_cases: List[Dict]) -> Dict:
@@ -187,7 +190,7 @@ class PromptGeneratorOrchestrator:
                     if step_format not in patterns["step_formats"]:
                         patterns["step_formats"].append(step_format)
 
-        print(f"✅ Analyzed patterns:")
+        print("✅ Analyzed patterns:")
         print(f"   - Test types: {patterns['types']}")
         print(f"   - Priorities: {patterns['priorities']}")
         print(f"   - Sample titles: {patterns['naming_conventions'][:3]}")
@@ -216,7 +219,7 @@ class PromptGeneratorOrchestrator:
                 return data[:max_samples]
             print("⚠️  Unexpected generated test cases format (expected list)")
             return []
-        except Exception as e:
+        except OSError as e:
             print(f"❌ Error reading generated test cases: {str(e)}")
             return []
 
@@ -226,7 +229,7 @@ class PromptGeneratorOrchestrator:
         try:
             if isinstance(OVERRIDE_FIELDS, dict):
                 overrides = OVERRIDE_FIELDS
-        except Exception:
+        except (TypeError, AttributeError):
             overrides = {}
         if overrides:
             print("🛠️  Loaded field overrides:", list(overrides.keys()))
@@ -305,7 +308,7 @@ class PromptGeneratorOrchestrator:
                         return "number"
                     int(s)
                     return "integer"
-                except Exception:
+                except (ValueError, TypeError):
                     return "string"
             if isinstance(value, list):
                 return "array"
@@ -449,7 +452,7 @@ class PromptGeneratorOrchestrator:
 
                 print(f"✅ Loaded feature: {file_path.name}")
 
-            except Exception as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"❌ Error reading {file_path.name}: {str(e)}")
 
         print(f"✅ Loaded {len(features)} feature files")
@@ -512,7 +515,7 @@ class PromptGeneratorOrchestrator:
             if "browser" in content or "chrome" in content or "firefox" in content:
                 requirements["browser_support"].append(feature["filename"])
 
-        print(f"✅ Extracted requirements:")
+        print("✅ Extracted requirements:")
         for req_type, files in requirements.items():
             if files:
                 print(f"   - {req_type}: {len(files)} files")
@@ -538,7 +541,7 @@ class PromptGeneratorOrchestrator:
                 config["wcag_guideline"] = "WCAG 2.1 AA"  # Default
                 print("   ⚠️  WCAG Guideline not set, using default: WCAG 2.1 AA")
 
-        print(f"✅ Loaded configuration:")
+        print("✅ Loaded configuration:")
         print(f"   - Test case count: {config['test_case_count']}")
         print(f"   - Test types: {config['test_types']}")
         print(f"   - Priority distribution: {config['priority_distribution']}")
@@ -549,7 +552,7 @@ class PromptGeneratorOrchestrator:
 
     def save_test_cases(self, test_cases: List[Dict], feature_name: str = "generated"):
         """Save generated test cases to target folder"""
-        print(f"💾 Saving test cases to target folder...")
+        print("💾 Saving test cases to target folder...")
 
         filename = f"{feature_name}_test_cases.json"
         filepath = os.path.join(self.target_dir, filename)
@@ -563,7 +566,7 @@ class PromptGeneratorOrchestrator:
             # Create summary
             self.create_summary(test_cases, filepath)
 
-        except Exception as e:
+        except (OSError, TypeError, ValueError) as e:
             print(f"❌ Error saving test cases: {str(e)}")
 
     def create_summary(self, test_cases: List[Dict], filepath: str):
@@ -602,7 +605,7 @@ Breakdown by Type:
             with open(summary_file, "w", encoding="utf-8") as f:
                 f.write(summary)
             print(f"✅ Summary saved to {os.path.basename(summary_file)}")
-        except Exception as e:
+        except (OSError, IOError) as e:
             print(f"⚠️  Error saving summary: {str(e)}")
 
     def save_prompt_data(self, prompt_data: Dict):
@@ -851,7 +854,7 @@ Study this example to understand the exact format and style:
             test_count = prompt_data["config"]["test_case_count"]
             similarity_threshold = SIMILARITY_THRESHOLD
 
-            prompt_data_section += f"""
+            prompt_data_section += """
 
 ## ⚙️ Generation Instructions
 
@@ -1014,7 +1017,7 @@ After generating the test cases, you MUST check for potential duplicates:
 
             print(f"✅ Prompt data saved to {self.prompt_file}")
 
-        except Exception as e:
+        except (OSError, TypeError, ValueError) as e:
             print(f"❌ Error saving prompt data: {str(e)}")
             import traceback
 

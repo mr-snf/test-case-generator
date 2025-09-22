@@ -4,6 +4,7 @@ Script to extract all test cases from TestRail and save them to knowledgebase fo
 
 import os
 import sys
+import traceback
 from typing import Dict, List
 
 from configs.config import (
@@ -23,7 +24,7 @@ def extract_test_cases():
     # Ensure knowledgebase directory exists
     os.makedirs("knowledgebase", exist_ok=True)
 
-    print(f"=== TestRail Test Case Extractor ===")
+    print("=== TestRail Test Case Extractor ===")
     print(f"TestRail URL: {TESTRAIL_URL}")
     print(f"Project ID: {project_id}")
     print(f"Output file: {output_file}")
@@ -95,9 +96,8 @@ def extract_test_cases():
         else:
             print("No test cases found in the project")
 
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError) as e:
         print(f"Error extracting test cases: {str(e)}")
-        import traceback
 
         traceback.print_exc()
         sys.exit(1)
@@ -154,7 +154,7 @@ Breakdown by Priority:
         type_name = type_names.get(type_id, f"Unknown ({type_id})")
         summary += f"  - {type_name}: {count}\n"
 
-    summary += f"\nBreakdown by Section:\n"
+    summary += "\nBreakdown by Section:\n"
     for section_id, count in section_counts.items():
         summary += f"  - Section {section_id}: {count}\n"
 

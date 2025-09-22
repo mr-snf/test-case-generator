@@ -32,7 +32,7 @@ class TicketDetailsFetcher:
             sys.exit(1)
         except Exception as e:
             print(f"❌ Failed to initialize Jira client: {e}")
-            sys.exit(1)
+            raise
 
     def test_connection(self) -> bool:
         """Test the connection to Jira"""
@@ -46,7 +46,7 @@ class TicketDetailsFetcher:
                 return False
         except Exception as e:
             print(f"❌ Connection test failed: {e}")
-            return False
+            raise
 
     def get_ticket_details(self, ticket_id: str) -> Dict:
         """
@@ -82,7 +82,7 @@ class TicketDetailsFetcher:
 
         except Exception as e:
             print(f"❌ Error fetching ticket details: {e}")
-            return {}
+            raise
 
     def _get_attachments(self, attachments: List[Dict]) -> List[Dict]:
         """
@@ -138,7 +138,7 @@ class TicketDetailsFetcher:
             print(f"✅ Ticket details saved to: {output_file}")
             return output_file
 
-        except Exception as e:
+        except OSError as e:
             print(f"❌ Error saving to file: {e}")
             return ""
 
@@ -208,9 +208,7 @@ class TicketDetailsFetcher:
 
             try:
                 # Download the file
-                response = self.jira_client._session.get(
-                    url, auth=self.jira_client.auth
-                )
+                response = self.jira_client.session.get(url, auth=self.jira_client.auth)
                 if response.status_code == 200:
                     file_path = os.path.join(download_dir, filename)
                     with open(file_path, "wb") as f:
@@ -222,7 +220,7 @@ class TicketDetailsFetcher:
                         f"  ❌ Failed to download {filename}: HTTP {response.status_code}"
                     )
 
-            except Exception as e:
+            except OSError as e:
                 print(f"  ❌ Error downloading {filename}: {e}")
 
         print(f"📥 Downloaded {len(downloaded_files)} files successfully")
@@ -249,7 +247,7 @@ def main():
     fetcher.print_summary(ticket_details)
 
     # Save to JSON (if requested)
-    output_dir = f"feature"
+    output_dir = "feature"
     fetcher.save_to_json(
         ticket_details, f"{output_dir}/ticket_details_{JIRA_TICKET_ID}.json"
     )
